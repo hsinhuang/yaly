@@ -34,3 +34,13 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# swap files
+*~
+*.swp
+*.swap
+*.tmp
+
+# yacc ouput
+*.out
+parsetab.py
