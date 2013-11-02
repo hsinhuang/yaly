@@ -44,3 +44,6 @@ nosetests.xml
 # yacc ouput
 *.out
 parsetab.py
+
+# lib pyre
+pyre
