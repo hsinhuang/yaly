@@ -1,0 +1,15 @@
+Metadata-Version: 1.0
+Name: lexer
+Version: 0.1.0
+Summary: A Simple Lexer
+Author: Leonardo Huang
+Author-email: leon@njuopen.com
+License: GPL v2
+Description:
+        LEXER is yet another simple lexer implemented in Python.
+        It is fit for teaching and learning.
+        It is compatible with both Python 2 and Python 3.
+
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 2
