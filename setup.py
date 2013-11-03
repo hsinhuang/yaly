@@ -19,7 +19,7 @@ It is compatible with both Python 2 and Python 3.
     url = "https://github.com/leon-huang/lexer",
     packages = ['lexer'],
     install_requires = ['pyre'],
-    dependency_links = ['https://github.com/leon-huang/pyre/tarball/master#egg=pyre-0.3.1'],
+    dependency_links = ['https://github.com/leon-huang/pyre/tarball/master#egg=pyre-0.4.3'],
     classifiers = [
       'Programming Language :: Python :: 3',
       'Programming Language :: Python :: 2',

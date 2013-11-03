@@ -3,4 +3,4 @@
 
 """init file of the package"""
 
-from .lex import lex
+from .lex import lex, glo

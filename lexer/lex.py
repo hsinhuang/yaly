@@ -96,4 +96,7 @@ def lex():
                 (func.__doc__, func_name)
             )
         regexs.append(func.__doc__)
-    return Lexer(compiled_tokens, pyre.compile(pyre.selection(regexs)))
+    return Lexer(compiled_tokens, pyre.compile(pyre.select(regexs)))
+
+def glo():
+    return globals()

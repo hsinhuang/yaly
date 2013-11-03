@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # coding:utf-8
 
-"""lex definition for C--"""
+"""lex definition for C"""
 #pylint: disable=C0103
 
-import pyre
+from pyre import *
+import lexer
 
 # Reserved words
 
@@ -43,101 +44,198 @@ tokens = [
 ]
 
 # Operators
-t_PLUS             = pyre.escape('+')
-t_MINUS            = pyre.escape('-')
-t_TIMES            = pyre.escape('*')
-t_DIVIDE           = pyre.escape('/')
-t_MODULO           = pyre.escape('%')
-t_OR               = pyre.escape('|')
-t_AND              = pyre.escape('&')
-t_NOT              = pyre.escape('~')
-t_XOR              = pyre.escape('^')
-t_LSHIFT           = pyre.concatenation('<<')
-t_RSHIFT           = pyre.concatenation('>>')
-t_LOR              = pyre.concatenation('||')
-t_LAND             = pyre.concatenation('&&')
-t_LNOT             = pyre.escape('!')
-t_LT               = pyre.escape('<')
-t_GT               = pyre.escape('>')
-t_LE               = pyre.concatenation('<=')
-t_GE               = pyre.concatenation('>=')
-t_EQ               = pyre.concatenation('==')
-t_NE               = pyre.concatenation('!=')
+t_PLUS             = escape('+')
+t_MINUS            = escape('-')
+t_TIMES            = escape('*')
+t_DIVIDE           = escape('/')
+t_MODULO           = escape('%')
+t_OR               = escape('|')
+t_AND              = escape('&')
+t_NOT              = escape('~')
+t_XOR              = escape('^')
+t_LSHIFT           = concat(list('<<'))
+t_RSHIFT           = concat(list('>>'))
+t_LOR              = concat(list('||'))
+t_LAND             = concat(list('&&'))
+t_LNOT             = escape('!')
+t_LT               = escape('<')
+t_GT               = escape('>')
+t_LE               = concat(list('<='))
+t_GE               = concat(list('>='))
+t_EQ               = concat(list('=='))
+t_NE               = concat(list('!='))
 
 # Assignment operators
 
-t_EQUALS           = pyre.escape('=')
-t_TIMESEQUAL       = pyre.concatenation('*=')
-t_DIVEQUAL         = pyre.concatenation('/=')
-t_MODEQUAL         = pyre.concatenation('%=')
-t_PLUSEQUAL        = pyre.concatenation('+=')
-t_MINUSEQUAL       = pyre.concatenation('-=')
-t_LSHIFTEQUAL      = pyre.concatenation('<<=')
-t_RSHIFTEQUAL      = pyre.concatenation('>>=')
-t_ANDEQUAL         = pyre.concatenation('&=')
-t_OREQUAL          = pyre.concatenation('|=')
-t_XOREQUAL         = pyre.concatenation('^=')
+t_EQUALS           = escape('=')
+t_TIMESEQUAL       = concat(list('*='))
+t_DIVEQUAL         = concat(list('/='))
+t_MODEQUAL         = concat(list('%='))
+t_PLUSEQUAL        = concat(list('+='))
+t_MINUSEQUAL       = concat(list('-='))
+t_LSHIFTEQUAL      = concat(list('<<='))
+t_RSHIFTEQUAL      = concat(list('>>='))
+t_ANDEQUAL         = concat(list('&='))
+t_OREQUAL          = concat(list('|='))
+t_XOREQUAL         = concat(list('^='))
 
 # Increment/decrement
-t_INCREMENT        = pyre.concatenation('++')
-t_DECREMENT        = pyre.concatenation('--')
+t_INCREMENT        = concat(list('++'))
+t_DECREMENT        = concat(list('--'))
 
 # ->
-t_ARROW            = pyre.concatenation('->')
+t_ARROW            = concat(list('->'))
 
 # ?
-t_TERNARY          = pyre.escape('?')
+t_TERNARY          = escape('?')
 
 # Delimeters
-t_LPAREN           = pyre.escape('(')
-t_RPAREN           = pyre.escape(')')
-t_LBRACKET         = pyre.escape('[')
-t_RBRACKET         = pyre.escape(']')
-t_LBRACE           = pyre.escape('{')
-t_RBRACE           = pyre.escape('}')
-t_COMMA            = pyre.escape(',')
-t_PERIOD           = pyre.escape('.')
-t_SEMI             = pyre.escape(';')
-t_COLON            = pyre.escape(':')
-t_ELLIPSIS         = pyre.concatenation('...')
+t_LPAREN           = escape('(')
+t_RPAREN           = escape(')')
+t_LBRACKET         = escape('[')
+t_RBRACKET         = escape(']')
+t_LBRACE           = escape('{')
+t_RBRACE           = escape('}')
+t_COMMA            = escape(',')
+t_PERIOD           = escape('.')
+t_SEMI             = escape(';')
+t_COLON            = escape(':')
+t_ELLIPSIS         = concat(list('...'))
 
 # Identifiers: r'[A-Za-z_][A-Za-z0-9_]*'
-t_ID = pyre.concatenation([
-    pyre.selection([
-        pyre.selection(pyre.LOWERCASE),
-        pyre.selection(pyre.UPPERCASE),
-        pyre.escape('_'),
-    ]),
-    pyre.loop(
-        pyre.selection([
-            pyre.selection(pyre.LOWERCASE),
-            pyre.selection(pyre.UPPERCASE),
-            pyre.escape('_'),
-            pyre.selection(pyre.DIGITS),
-        ])
+t_ID = concat([
+    select([LOWERCASE, UPPERCASE, escape('_')]),
+    loop(
+        select([LOWERCASE, UPPERCASE, escape('_'), DIGIT])
     )
 ])
 
 # Integer literal
-t_INTEGER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+def t_INTEGER(t):
+    i = compile(loop_(DIGIT))
+    t.value = int(t.value[:i.match_prefix(t.value)])
+    return t
 
-# Floating literal
-t_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+t_INTEGER.__doc__ = concat([
+    loop_(DIGIT),
+    optional(
+        select([
+            select(list('uU')),
+            select(list('lL')),
+            concat([select(list('uU')), select(list('lL'))]),
+            concat([select(list('lL')), select(list('uU'))]),
+        ])
+    ),
+])
 
-# String literal
-t_STRING = r'\"([^\\\n]|(\\.))*?\"'
+# Floating literal:
+def t_FLOAT(t):
+    f = compile(select([
+            concat([
+                loop_(DIGIT),
+                concat(['.', loop_(DIGIT)]),
+                optional(
+                    concat([
+                        'e',
+                        optional(select(list('+-'))),
+                        loop_(DIGIT),
+                    ])
+                ),
+            ]),
+            concat([
+                loop_(DIGIT),
+                'e',
+                optional(select(list('+-'))),
+                loop_(DIGIT),
+            ])
+        ])
+    )
+    t.value = float(t.value[:f.match_prefix(t.value)])
+    return t
 
-# Character constant 'c' or L'c'
-t_CHARACTER = r'(L)?\'([^\\\n]|(\\.))*?\''
+t_FLOAT.__doc__ = concat([
+    select([
+        concat([
+            loop_(DIGIT),
+            concat(['.', loop_(DIGIT)]),
+            optional(
+                concat([
+                    'e',
+                    optional(select(list('+-'))),
+                    loop_(DIGIT),
+                ])
+            ),
+        ]),
+        concat([
+            loop_(DIGIT),
+            'e',
+            optional(select(list('+-'))),
+            loop_(DIGIT),
+        ])
+    ]),
+    optional(
+        select([
+            select(list('lL')),
+            select(list('fF')),
+        ])
+    )
+])
+
+# String literal: r'\"([^\\\n]|(\\.))*?\"'
+t_STRING = concat([
+    '"',
+    loop(
+        select([
+            diff(['\n', '"', '\\']),
+            concat(['\\', WILDCARD]),
+        ])
+    ),
+    '"',
+])
+
+# Character constant 'c' or L'c': r'(L)?\'([^\\\n]|(\\.))*?\''
+t_CHARACTER = concat([
+    optional('L'),
+    escape("'"),
+    select([
+        diff(list('\\\n\r\f\v')),
+        concat([
+            '\\',
+            select(["'", LOWERCASE, loop_(DIGIT)]),
+        ]),
+    ]),
+    escape("'"),
+])
 
 # Comment (C-Style)
 def t_COMMENT(t):
-    r'/\*(.|\n)*?\*/'
     t.lexer.lineno += t.value.count('\n')
     return t
 
+t_COMMENT.__doc__ = concat([
+    '/',
+    '*',
+    select([
+        diff(['*']),
+        concat(['*', diff(['/'])]),
+    ]),
+    '*',
+    '/'
+])
+
 # Comment (C++-Style)
 def t_CPPCOMMENT(t):
-    r'//.*\n'
     t.lexer.lineno += 1
     return t
+
+t_CPPCOMMENT.__doc__ = concat([
+    '/',
+    '/',
+    diff(['\n']),
+    '\n',
+])
+
+# scanner = lexer.lex()
+
+# for token in scanner.get_next_token():
+#     print token
