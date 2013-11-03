@@ -30,6 +30,7 @@ class Lexer:
         `tokens` is a dict map token name (i.e. lexical unit) to a tuple,
         of which the first position is a compiled regular expression
         (type: pyre.RegEx) and the second one is the function
+
         `regex` is a compiled RegEx object which accepts all valid
         string
         """
@@ -41,9 +42,24 @@ class Lexer:
         """
         return next token(type: Token)
         """
-        assert self.__string__
+        while self.__string__:
+            next_idx = self.__re__.match_prefix(self.__string__)
+            if not next_idx:
+                raise SyntaxWarning("remaining `%s` cannot be parsed" % \
+                    self.__string__)
+            lexeme = self.__string__[:next_idx]
+            self.__string__ = self.__string__[next_idx:]
+            for token in self.__tokens__:
+                if self.__tokens__[token][0].match(lexeme):
+                    yield self.__tokens__[token][1](
+                        Token(token, lexeme, self)
+                        )
+                    break
+            else:
+                raise AssertionError("lexeme `%s` is valid but not " + \
+                    "found the corresponding lexical unit" % lexeme)
     def set_string(self, string):
-        """set input file name"""
+        """set input string"""
         self.__string__ = string
 
 __default_token_func_template__ = """
@@ -63,8 +79,8 @@ def lex():
     for token in tokens:
         func_name = 't_' + token
         if func_name not in all_vars:
-            raise AttributeError(
-                'declared token `%s` but `%s` not found' % \
+            raise NotImplementedError(
+                'declared token `%s` but not define `%s`' % \
                 (token, func_name)
             )
         func = all_vars[func_name]
@@ -80,4 +96,4 @@ def lex():
                 (func.__doc__, func_name)
             )
         regexs.append(func.__doc__)
-    return Lexer(compiled_tokens, pyre.compile('|'.join(regexs)))
+    return Lexer(compiled_tokens, pyre.compile(pyre.selection(regexs)))
