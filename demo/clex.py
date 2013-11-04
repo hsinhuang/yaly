@@ -9,10 +9,16 @@ import lexer
 
 # Reserved words
 
-tokens = [
-    # Literals (identifier, integer constant, float constant,
-    # string constant, char const)
-    'ID', 'TYPEID', 'ICONST', 'FCONST', 'SCONST', 'CCONST',
+tokens = (
+    # Types
+    'CHAR', 'INT', 'LONG', 'FLOAT', 'DOUBLE',
+    'CONST', 'SIGNED', 'UNSIGNED',
+
+    # Literals
+    'INTEGER', 'FLOAT', 'STRING', 'CHARACTER',
+
+    # Comment
+    'COMMENT', 'CPPCOMMENT',
 
     # Operators (+,-,*,/,%,|,&,~,^,<<,>>, ||, &&, !, <, <=, >, >=, ==, !=)
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',
@@ -21,7 +27,7 @@ tokens = [
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
     # Assignment (=, *=, /=, %=, +=, -=, <<=, >>=, &=, ^=, |=)
-    'EQUALS', 'TIMESEQUAL', 'DIVEQUAL', 'MODEQUAL', 'PLUSEQUAL', 'MINUSEQUAL',
+    'EQUAL', 'TIMESEQUAL', 'DIVEQUAL', 'MODEQUAL', 'PLUSEQUAL', 'MINUSEQUAL',
     'LSHIFTEQUAL','RSHIFTEQUAL', 'ANDEQUAL', 'XOREQUAL', 'OREQUAL',
 
     # Increment/decrement (++,--)
@@ -41,14 +47,33 @@ tokens = [
 
     # Ellipsis (...)
     'ELLIPSIS',
-]
+
+    # Newline \n
+    'NEWLINE',
+
+    # whitespace
+    'WHITESPACE',
+
+    # Identifier
+    'ID',
+)
+
+#Types
+t_CHAR             = concat(list('char'))
+t_INT              = concat(list('int'))
+t_LONG             = concat(list('long'))
+t_FLOAT            = concat(list('float'))
+t_DOUBLE           = concat(list('double'))
+t_CONST            = concat(list('const'))
+t_SIGNED           = concat(list('signed'))
+t_UNSIGNED         = concat(list('unsigned'))
 
 # Operators
 t_PLUS             = escape('+')
 t_MINUS            = escape('-')
 t_TIMES            = escape('*')
 t_DIVIDE           = escape('/')
-t_MODULO           = escape('%')
+t_MOD              = escape('%')
 t_OR               = escape('|')
 t_AND              = escape('&')
 t_NOT              = escape('~')
@@ -67,7 +92,7 @@ t_NE               = concat(list('!='))
 
 # Assignment operators
 
-t_EQUALS           = escape('=')
+t_EQUAL            = escape('=')
 t_TIMESEQUAL       = concat(list('*='))
 t_DIVEQUAL         = concat(list('/='))
 t_MODEQUAL         = concat(list('%='))
@@ -80,8 +105,8 @@ t_OREQUAL          = concat(list('|='))
 t_XOREQUAL         = concat(list('^='))
 
 # Increment/decrement
-t_INCREMENT        = concat(list('++'))
-t_DECREMENT        = concat(list('--'))
+t_PLUSPLUS         = concat(list('++'))
+t_MINUSMINUS       = concat(list('--'))
 
 # ->
 t_ARROW            = concat(list('->'))
@@ -101,6 +126,7 @@ t_PERIOD           = escape('.')
 t_SEMI             = escape(';')
 t_COLON            = escape(':')
 t_ELLIPSIS         = concat(list('...'))
+t_WHITESPACE       = loop_(select([' ', '\t']))
 
 # Identifiers: r'[A-Za-z_][A-Za-z0-9_]*'
 t_ID = concat([
@@ -112,73 +138,36 @@ t_ID = concat([
 
 # Integer literal
 def t_INTEGER(t):
-    i = compile(loop_(DIGIT))
-    t.value = int(t.value[:i.match_prefix(t.value)])
+    t.value = int(t.value)
     return t
 
 t_INTEGER.__doc__ = concat([
     loop_(DIGIT),
-    optional(
-        select([
-            select(list('uU')),
-            select(list('lL')),
-            concat([select(list('uU')), select(list('lL'))]),
-            concat([select(list('lL')), select(list('uU'))]),
-        ])
-    ),
 ])
 
 # Floating literal:
 def t_FLOAT(t):
-    f = compile(select([
+    t.value = float(t.value)
+    return t
+
+t_FLOAT.__doc__ = select([
+    concat([
+        loop_(DIGIT),
+        concat(['.', loop_(DIGIT)]),
+        optional(
             concat([
-                loop_(DIGIT),
-                concat(['.', loop_(DIGIT)]),
-                optional(
-                    concat([
-                        'e',
-                        optional(select(list('+-'))),
-                        loop_(DIGIT),
-                    ])
-                ),
-            ]),
-            concat([
-                loop_(DIGIT),
                 'e',
                 optional(select(list('+-'))),
                 loop_(DIGIT),
             ])
-        ])
-    )
-    t.value = float(t.value[:f.match_prefix(t.value)])
-    return t
-
-t_FLOAT.__doc__ = concat([
-    select([
-        concat([
-            loop_(DIGIT),
-            concat(['.', loop_(DIGIT)]),
-            optional(
-                concat([
-                    'e',
-                    optional(select(list('+-'))),
-                    loop_(DIGIT),
-                ])
-            ),
-        ]),
-        concat([
-            loop_(DIGIT),
-            'e',
-            optional(select(list('+-'))),
-            loop_(DIGIT),
-        ])
+        ),
     ]),
-    optional(
-        select([
-            select(list('lL')),
-            select(list('fF')),
-        ])
-    )
+    concat([
+        loop_(DIGIT),
+        'e',
+        optional(select(list('+-'))),
+        loop_(DIGIT),
+    ])
 ])
 
 # String literal: r'\"([^\\\n]|(\\.))*?\"'
@@ -186,8 +175,8 @@ t_STRING = concat([
     '"',
     loop(
         select([
-            diff(['\n', '"', '\\']),
-            concat(['\\', WILDCARD]),
+            diff(list('\\\n\r\f\v\t"')),
+            concat(['\\', select([LOWERCASE, '"'])]),
         ])
     ),
     '"',
@@ -195,14 +184,10 @@ t_STRING = concat([
 
 # Character constant 'c' or L'c': r'(L)?\'([^\\\n]|(\\.))*?\''
 t_CHARACTER = concat([
-    optional('L'),
     escape("'"),
     select([
-        diff(list('\\\n\r\f\v')),
-        concat([
-            '\\',
-            select(["'", LOWERCASE, loop_(DIGIT)]),
-        ]),
+        diff(list('\\\n\r\f\v\t\'')),
+        concat(['\\', select([LOWERCASE, '\''])]),
     ]),
     escape("'"),
 ])
@@ -235,7 +220,18 @@ t_CPPCOMMENT.__doc__ = concat([
     '\n',
 ])
 
-# scanner = lexer.lex()
+# Newline
+def t_NEWLINE(t):
+    t.lexer.lineno += 1
+    return t
 
-# for token in scanner.get_next_token():
-#     print token
+t_NEWLINE.__doc__ = escape('\n')
+
+scanner = lexer.lex()
+
+import os.path as p
+with open(p.join(p.dirname(__file__), 'temp.c'), 'r') as f:
+    s = f.read()
+scanner.set_string(s)
+for token in scanner.get_next_token():
+    print token
