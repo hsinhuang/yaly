@@ -1,4 +1,4 @@
-lexer
+Yet Another Lexer
 =====
 
 A simple lexer, of which the regular expression part is based on another

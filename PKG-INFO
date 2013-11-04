@@ -1,7 +1,7 @@
 Metadata-Version: 1.0
-Name: lexer
+Name: yalexer
 Version: 0.1.0
-Summary: A Simple Lexer
+Summary: Yet Another Lexer
 Author: Leonardo Huang
 Author-email: leon@njuopen.com
 License: GPL v2

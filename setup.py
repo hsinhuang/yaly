@@ -3,8 +3,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-setup(name = "lexer",
-    description="A Simple Lexer",
+setup(name = "yalexer",
+    description="Yet Another Lexer",
     long_description = """
 LEXER is yet another simple lexer implemented in Python.
 It is fit for teaching and learning.
