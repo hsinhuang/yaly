@@ -13,28 +13,33 @@ class Token:
     """
     def __init__(self, lexical_unit, value, lexer):
         assert type(lexical_unit) == str
-        self.__raw__ = lexical_unit
         self.__lexical_unit__ = lexical_unit
+        self.__raw__ = value
         self.value = value
-        self.__lexer__ = lexer
+        self.lexer = lexer
     def __str__(self):
-        return self.__raw__
+        return "<%s, %s>" % \
+            (self.__lexical_unit__, `self.value`)
     def lexical_unit(self):
         """getter : __lexical_unit__"""
         return self.__lexical_unit__
 
 class Lexer:
     """Lexer performs lexical analysis"""
-    def __init__(self, tokens, regex):
+    def __init__(self, tokens, raw_tokens, regex):
         """
         `tokens` is a dict map token name (i.e. lexical unit) to a tuple,
         of which the first position is a compiled regular expression
         (type: pyre.RegEx) and the second one is the function
 
+        `raw_tokens` is an iterable object which contains all tokens name
+        and the order in it is the precedence of each token
+
         `regex` is a compiled RegEx object which accepts all valid
         string
         """
         self.__tokens__ = tokens
+        self.__raw_tokens__ = raw_tokens
         self.__string__ = None
         self.__re__ = regex
         self.lineno = 0
@@ -42,6 +47,8 @@ class Lexer:
         """
         return next token(type: Token)
         """
+        if self.__string__ is None:
+            raise UserWarning('having not specify input string')
         while self.__string__:
             next_idx = self.__re__.match_prefix(self.__string__)
             if not next_idx:
@@ -49,7 +56,8 @@ class Lexer:
                     self.__string__)
             lexeme = self.__string__[:next_idx]
             self.__string__ = self.__string__[next_idx:]
-            for token in self.__tokens__:
+            for token in self.__raw_tokens__:
+                assert token in self.__tokens__
                 if self.__tokens__[token][0].match(lexeme):
                     yield self.__tokens__[token][1](
                         Token(token, lexeme, self)
@@ -61,12 +69,7 @@ class Lexer:
     def set_string(self, string):
         """set input string"""
         self.__string__ = string
-
-__default_token_func_template__ = """
-def %s(t):
-    "%s"
-    return t
-"""
+        self.lineno = 1
 
 def lex():
     """
@@ -74,7 +77,8 @@ def lex():
     """
     compiled_tokens = {}
     regexs = []
-    all_vars = globals()
+    import sys
+    all_vars = sys._getframe(1).f_locals
     tokens = all_vars['tokens']
     for token in tokens:
         func_name = 't_' + token
@@ -85,8 +89,9 @@ def lex():
             )
         func = all_vars[func_name]
         if type(func) is str:
-            exec (__default_token_func_template__ % (func_name, func))
-            func = globals()[func_name]
+            all_vars[func_name] = lambda t : t
+            all_vars[func_name].__doc__ = func
+            func = all_vars[func_name]
         try:
             compiled_tokens[token] = (pyre.compile(func.__doc__), func)
         except SyntaxError:
@@ -96,7 +101,4 @@ def lex():
                 (func.__doc__, func_name)
             )
         regexs.append(func.__doc__)
-    return Lexer(compiled_tokens, pyre.compile(pyre.select(regexs)))
-
-def glo():
-    return globals()
+    return Lexer(compiled_tokens, tokens, pyre.compile(pyre.select(regexs)))
