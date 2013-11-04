@@ -3,7 +3,6 @@
 
 """lexical analysis"""
 
-import inspect
 import pyre
 
 class Token:
@@ -19,7 +18,7 @@ class Token:
         self.lexer = lexer
     def __str__(self):
         return "<%s, %s>" % \
-            (self.__lexical_unit__, `self.value`)
+            (self.__lexical_unit__, repr(self.value))
     def lexical_unit(self):
         """getter : __lexical_unit__"""
         return self.__lexical_unit__
