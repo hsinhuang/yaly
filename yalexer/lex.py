@@ -3,8 +3,6 @@
 
 """lexical analysis"""
 
-import pyre
-
 class Token:
     """
     A token is a string of one or more characters that is significant
@@ -91,8 +89,9 @@ def lex():
             all_vars[func_name] = lambda t : t
             all_vars[func_name].__doc__ = func
             func = all_vars[func_name]
+        import yare
         try:
-            compiled_tokens[token] = (pyre.compile(func.__doc__), func)
+            compiled_tokens[token] = (yare.compile(func.__doc__), func)
         except SyntaxError:
             raise SyntaxError(
                 'regular expression `%s` specified \
@@ -100,4 +99,4 @@ def lex():
                 (func.__doc__, func_name)
             )
         regexs.append(func.__doc__)
-    return Lexer(compiled_tokens, tokens, pyre.compile(pyre.select(regexs)))
+    return Lexer(compiled_tokens, tokens, yare.compile(yare.select(regexs)))

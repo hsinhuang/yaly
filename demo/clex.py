@@ -4,7 +4,7 @@
 """lex definition for C"""
 #pylint: disable=C0103
 
-from pyre import *
+from yare import *
 import lexer
 
 # Reserved words
