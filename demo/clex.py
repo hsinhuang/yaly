@@ -11,7 +11,7 @@ import lexer
 
 tokens = (
     # Types
-    'CHAR', 'INT', 'LONG', 'FLOAT', 'DOUBLE',
+    'CHAR', 'INT', 'LONG', 'FLOAT', 'DOUBLE', 'VOID',
     'CONST', 'SIGNED', 'UNSIGNED',
 
     # Literals
@@ -64,6 +64,7 @@ t_INT              = concat(list('int'))
 t_LONG             = concat(list('long'))
 t_FLOAT            = concat(list('float'))
 t_DOUBLE           = concat(list('double'))
+t_VOID             = concat(list('void'))
 t_CONST            = concat(list('const'))
 t_SIGNED           = concat(list('signed'))
 t_UNSIGNED         = concat(list('unsigned'))
@@ -200,10 +201,12 @@ def t_COMMENT(t):
 t_COMMENT.__doc__ = concat([
     '/',
     '*',
-    select([
-        diff(['*']),
-        concat(['*', diff(['/'])]),
-    ]),
+    loop(
+        select([
+            diff(['*']),
+            concat(['*', diff(['/'])]),
+        ])
+    ),
     '*',
     '/'
 ])
@@ -216,7 +219,7 @@ def t_CPPCOMMENT(t):
 t_CPPCOMMENT.__doc__ = concat([
     '/',
     '/',
-    diff(['\n']),
+    loop(diff(['\n'])),
     '\n',
 ])
 
