@@ -5,7 +5,7 @@
 #pylint: disable=C0103
 
 import yare
-import yaly as lex
+import yaly.lex as lex
 
 tokens = (
     # Types

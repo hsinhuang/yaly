@@ -3,4 +3,5 @@
 
 """init file of the package"""
 
-from .lex import lex
+import lex
+import yacc

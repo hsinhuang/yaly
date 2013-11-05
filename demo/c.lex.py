@@ -5,7 +5,7 @@
 #pylint: disable=C0103
 
 from yare import *
-import yaly as lex
+import yaly.lex as lex
 
 # Reserved words
 
