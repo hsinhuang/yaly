@@ -1,0 +1,97 @@
+prog : epsilon
+prog : frag prog
+
+frag : dcl SEMI
+frag : func
+
+dcl : type var_decl var_decls
+dcl : EXTERN intern_dcl
+dcl : intern_dcl
+
+var_decls : epsilon
+var_decls : COMMA var_decl var_decls
+
+intern_dcl : type func_decl
+intern_dcl : VOID func_decl
+
+func_decl : ID LPAREN parm_types RPAREN func_decls
+
+func_decls : epsilon
+func_decls : COMMA ID LPAREN parm_types RPAREN func_decls
+
+var_decl : ID
+var_decl : ID LBRACKET INTCON RBRACKET
+
+type : CHAR
+type : INT
+
+parm_types : VOID
+parm_types : type ID more_param_types
+parm_types : type ID LBRACKET RBRACKET more_param_types
+
+more_param_types : epsilon
+more_param_types : COMMA type ID more_param_types
+more_param_types : COMMA type ID LBRACKET RBRACKET more_param_types
+
+func : type ID LPAREN parm_types RPAREN LBRACE in_func_decls stmts RBRACE
+func : VOID ID LPAREN parm_types RPAREN LBRACE in_func_decls stmts RBRACE
+
+in_func_decls : epsilon
+in_func_decls : in_func_decl SEMI in_func_decls
+
+in_func_decl : type var_decl var_decls
+
+stmts : epsilon
+stmts : stmt stmts
+
+stmt : IF LPAREN expr RPAREN stmt
+stmt : IF LPAREN expr RPAREN stmt ELSE stmt
+stmt : WHILE LPAREN expr RPAREN stmt
+stmt : FOR LPAREN assg SEMI stmt_for_2
+stmt : FOR LPAREN SEMI stmt_for_2
+stmt_for_2 : expr stmt_for_3 SEMI
+stmt_for_2 : stmt_for_3 SEMI
+stmt_for_3: assg RPAREN stmt
+stmt_for_3: RPAREN stmt
+stmt : RETURN expr SEMI
+stmt : RETURN SEMI
+stmt : assg SEMI
+stmt : ID LPAREN exprs RPAREN SEMI
+stmt : LBRACE stmts RBRACE
+stmt : SEMI
+
+exprs : epsilon
+exprs : expr more_exprs
+more_exprs : epsilon
+more_exprs : COMMA more_exprs
+
+assg : ID ASSIGN expr
+assg : ID LBRACKET expr RBRACKET ASSIGN expr
+
+expr : MINUS expr
+expr : NOT expr
+expr : expr binop expr
+expr : expr relop expr
+expr : expr logical_op expr
+expr : ID
+expr : ID LPAREN exprs RPAREN
+expr : ID LBRACKET expr RBRACKET
+expr : LPAREN expr RPAREN
+expr : INTCON
+expr : CHARCON
+expr : STRINGCON
+
+binop : PLUS
+binop : MINUS
+binop : TIMES
+binop : DIVIDE
+
+relop : EQ
+relop : NE
+relop : LE
+relop : LT
+relop : GE
+relop : GT
+
+logical_op : AND
+logical_op : OR
