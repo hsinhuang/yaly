@@ -7,5 +7,7 @@
 import yaly as yacc
 
 grammars = (
-
+    'program : stmts',
+    'stmts : stmt stmts',
+    'stmts : stmt',
 )
