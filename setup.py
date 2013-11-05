@@ -12,7 +12,7 @@ It is fit for teaching and learning.
 It is compatible with both Python 2 and Python 3.
 """,
     license="""GPL v2""",
-    version = "0.1.1",
+    version = "0.1",
     author = "Leonardo Huang",
     author_email = "leon@njuopen",
     maintainer = "Leonardo Huang",
@@ -20,7 +20,7 @@ It is compatible with both Python 2 and Python 3.
     url = "https://github.com/leon-huang/yalexer",
     packages = ['yaly'],
     install_requires = ['yare'],
-    dependency_links = ['https://github.com/leon-huang/yare/tarball/master#egg=yare-0.4.4'],
+    dependency_links = ['https://github.com/leon-huang/yare/tarball/master#egg=yare-0.4'],
     classifiers = [
       'Programming Language :: Python :: 3',
       'Programming Language :: Python :: 2',
