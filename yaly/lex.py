@@ -42,7 +42,7 @@ class Lexer:
         self.lineno = 0
     def get_next_token(self):
         """
-        return next token(type: Token)
+        return a token(type: Token) stream
         """
         if self.__string__ is None:
             raise UserWarning('having not specify input string')
