@@ -76,7 +76,15 @@ def lex():
     regexs = []
     import sys
     all_vars = sys._getframe(1).f_locals
+    if 'tokens' not in all_vars:
+        raise NotImplementedError(
+            'Lex need variable `tokens` but not defined'
+        )
     tokens = all_vars['tokens']
+    if not hasattr(tokens, '__iter__'):
+        raise TypeError(
+            'Lex expected variable `tokens` to be iterable'
+        )
     for token in tokens:
         if tokens.count(token) > 1:
             raise SyntaxWarning(
