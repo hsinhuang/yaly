@@ -51,8 +51,8 @@ stmt : FOR LPAREN assg SEMI stmt_for_2
 stmt : FOR LPAREN SEMI stmt_for_2
 stmt_for_2 : expr stmt_for_3 SEMI
 stmt_for_2 : stmt_for_3 SEMI
-stmt_for_3: assg RPAREN stmt
-stmt_for_3: RPAREN stmt
+stmt_for_3 : assg RPAREN stmt
+stmt_for_3 : RPAREN stmt
 stmt : RETURN expr SEMI
 stmt : RETURN SEMI
 stmt : assg SEMI
