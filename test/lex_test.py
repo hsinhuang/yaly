@@ -4,7 +4,7 @@
 """unit test cases for lex.py"""
 
 import unittest
-import lexer as lex
+import yaly as lex
 
 class TestLexer(unittest.TestCase):
     """test: Lexer.get_next_token"""

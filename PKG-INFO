@@ -1,12 +1,13 @@
 Metadata-Version: 1.0
-Name: yalexer
+Name: yaly
 Version: 0.1.1
-Summary: Yet Another Lexer
+Summary: Yet Another Lex-Yacc
 Author: Leonardo Huang
 Author-email: leon@njuopen.com
 License: GPL v2
 Description:
-        YALEXER is yet another simple lexer implemented in Python.
+        YALY is yet another simple implementation lex and
+        Lex-Yacc implemented in Python.
         It is fit for teaching and learning.
         It is compatible with both Python 2 and Python 3.
 
