@@ -86,10 +86,14 @@ def lex():
             'Lex expected variable `tokens` to be iterable'
         )
     for token in tokens:
+        if not token.isupper():
+            raise SyntaxError(
+                'token `%s` is not uppercase' % token
+            )
         if tokens.count(token) > 1:
             raise SyntaxWarning(
-                'declared %d token `%s`' % \
-                (tokens.count(token), token)
+                'declared token `%s` %d times' % \
+                (token, tokens.count(token))
             )
         func_name = 't_' + token
         if func_name not in all_vars:
