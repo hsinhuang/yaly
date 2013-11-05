@@ -7,8 +7,3 @@
 import yaly.yacc as yacc
 from cmm.lex import tokens
 
-grammars = (
-    'program : stmts',
-    'stmts : stmt stmts',
-    'stmts : stmt',
-)
