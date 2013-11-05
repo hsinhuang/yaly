@@ -78,6 +78,11 @@ def lex():
     all_vars = sys._getframe(1).f_locals
     tokens = all_vars['tokens']
     for token in tokens:
+        if tokens.count(token) > 1:
+            raise SyntaxWarning(
+                'declared %d token `%s`' % \
+                (tokens.count(token), token)
+            )
         func_name = 't_' + token
         if func_name not in all_vars:
             raise NotImplementedError(
