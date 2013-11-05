@@ -5,17 +5,24 @@
 #pylint: disable=C0103
 
 from yare import *
-import lexer
+import yaly as lex
 
 # Reserved words
 
 tokens = (
     # Types
     'CHAR', 'INT', 'LONG', 'FLOAT', 'DOUBLE', 'VOID',
-    'CONST', 'SIGNED', 'UNSIGNED',
+    'CONST', 'SIGNED', 'UNSIGNED', 'STATIC', 'STRUCT',
+    'UNION',
+
+    # Other keywords
+    'AUTO', 'BREAK', 'CASE', 'CONTINUE', 'DEFAULT',
+    'DO', 'ELSE', 'ENUM', 'EXTERN', 'FOR', 'GOTO',
+    'IF', 'REGISTER', 'RETURN', 'SIZEOF', 'SWITCH',
+    'TYPEDEF', 'VOLATILE', 'WHILE',
 
     # Literals
-    'INTEGER', 'FLOAT', 'STRING', 'CHARACTER',
+    'INTEGER', 'REAL', 'STRING', 'CHARACTER',
 
     # Comment
     'COMMENT', 'CPPCOMMENT',
@@ -68,6 +75,28 @@ t_VOID             = concat(list('void'))
 t_CONST            = concat(list('const'))
 t_SIGNED           = concat(list('signed'))
 t_UNSIGNED         = concat(list('unsigned'))
+t_STATIC           = concat(list('static'))
+t_STRUCT           = concat(list('struct'))
+t_UNION            = concat(list('union'))
+t_AUTO             = concat(list('auto'))
+t_BREAK            = concat(list('break'))
+t_CASE             = concat(list('case'))
+t_CONTINUE         = concat(list('continue'))
+t_DEFAULT          = concat(list('default'))
+t_DO               = concat(list('do'))
+t_ELSE             = concat(list('else'))
+t_ENUM             = concat(list('enum'))
+t_EXTERN           = concat(list('extern'))
+t_FOR              = concat(list('for'))
+t_GOTO             = concat(list('goto'))
+t_IF               = concat(list('if'))
+t_REGISTER         = concat(list('register'))
+t_RETURN           = concat(list('return'))
+t_SIZEOF           = concat(list('sizeof'))
+t_SWITCH           = concat(list('switch'))
+t_TYPEDEF          = concat(list('typedef'))
+t_VOLATILE         = concat(list('volatile'))
+t_WHILE            = concat(list('while'))
 
 # Operators
 t_PLUS             = escape('+')
@@ -147,11 +176,11 @@ t_INTEGER.__doc__ = concat([
 ])
 
 # Floating literal:
-def t_FLOAT(t):
+def t_REAL(t):
     t.value = float(t.value)
     return t
 
-t_FLOAT.__doc__ = select([
+t_REAL.__doc__ = select([
     concat([
         loop_(DIGIT),
         concat(['.', loop_(DIGIT)]),
@@ -177,7 +206,18 @@ t_STRING = concat([
     loop(
         select([
             diff(list('\\\n\r\f\v\t"')),
-            concat(['\\', select([LOWERCASE, '"'])]),
+            concat([
+                '\\',
+                select(['\\', '"', 'a', 'b', 'f',
+                    'n', 'r', 't', 'v', loop_(DIGIT),
+                    concat(['x',
+                        loop_(
+                            select([DIGIT, range('A', 'F'),
+                                range('a', 'f')])
+                        )
+                    ])
+                ]),
+            ]),
         ])
     ),
     '"',
@@ -188,7 +228,18 @@ t_CHARACTER = concat([
     escape("'"),
     select([
         diff(list('\\\n\r\f\v\t\'')),
-        concat(['\\', select([LOWERCASE, '\''])]),
+        concat([
+            '\\',
+            select(['\\', '\'', 'a', 'b', 'f',
+                'n', 'r', 't', 'v', loop_(DIGIT),
+                concat(['x',
+                    loop_(
+                        select([DIGIT, range('A', 'F'),
+                            range('a', 'f')])
+                    )
+                ])
+            ]),
+        ]),
     ]),
     escape("'"),
 ])
@@ -230,7 +281,7 @@ def t_NEWLINE(t):
 
 t_NEWLINE.__doc__ = escape('\n')
 
-scanner = lexer.lex()
+scanner = lex.lex()
 
 import os.path as p
 with open(p.join(p.dirname(__file__), 'temp.c'), 'r') as f:
