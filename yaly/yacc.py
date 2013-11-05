@@ -36,9 +36,10 @@ class LL1:
     def __init__(self, rules, precedences, terminals):
         """
         `rules` is a map from a non-terminal to a set of possible
-        replacement and each replacement is a tuple, of which the
-        first element is a proccessing fucntion, the second is a list
-        of terminals or non-terminals that can replace the non-terminal
+        replacement and each replacement is a two-element list, of which
+        the first element is a proccessing fucntion, the second is a
+        list of terminals or non-terminals that can replace the
+        non-terminal
         """
         self.__stream__ = None
         self.__rules__ = rules
@@ -66,9 +67,6 @@ def __strip_im_left_recr__(rule, nonterminals):
     return the stripped rules -- a map from a non-terminal to a list of
     possible rhs and each rhs is a list of possible replacement
     """
-    def randomword(length):
-        import random, string
-        return ''.join(random.choice(string.lowercase) for i in range(length))
     left_recr = []
     non_left_recr = []
     lhs = rule[0]
@@ -77,32 +75,49 @@ def __strip_im_left_recr__(rule, nonterminals):
             left_recr.append(rhs)
         else:
             non_left_recr.append(rhs)
-    lhs_ = lhs
+    lhs_ = lhs + '\''
     while lhs_ in nonterminals:
-        lhs_ = randomword(16)
+        lhs_ += '\''
     rules = {}
     rules[lhs] = []
     for beta in non_left_recr:
-        rules[lhs].append(beta+[lhs_])
-    rules[lhs_] = [ 'epsilon' ]
-    for alpha in left_recr:
-        rules[lhs_].append(alpha[1:]+[lhs_])
+        if len(beta) == 1 and beta[0] == 'epsilon':
+            rules[lhs].append([lhs_])
+        else:
+            rules[lhs].append(beta+[lhs_])
+    rules[lhs_] = [ ['epsilon'] ]
+    for a_alpha in left_recr:
+        rules[lhs_].append(a_alpha[1:]+[lhs_])
     return rules
 
 def __strip_left_recr__(rules, nonterminals):
     """strip all the left recursion in the rules"""
-    for i in range(len(nonterminals)):
+    length = len(nonterminals)
+    for i in range(length):
         for j in range(i):
-            Ys = [rhs[1:] for rhs in rules[nonterminals[i]][1] \
-                if rhs[0] == rules[nonterminals[j]]]
-            for y in Ys:
-                rules[nonterminals[i]][1] = \
-                    [delta+[y] for delta in rules[nonterminals[j]][1]]
-        rules[nonterminals[i]][1] = \
-            __strip_im_left_recr__(
-                (nonterminals[i], rules[nonterminals[i]][1]),
-                nonterminals
-            )
+            ai_lhs, aj_lhs = nonterminals[i], nonterminals[j]
+            ai_rhs, aj_rhs = [rhs for rhs in rules[ai_lhs][1]], \
+                [rhs for rhs in rules[aj_lhs][1]]
+            new_ai_rhs = []
+            for ajy in ai_rhs:
+                if ajy[0] == aj_lhs:
+                    for delta in aj_rhs:
+                        if len(delta) == 1 and delta[0] == 'epsilon':
+                            new_ai_rhs.append(ajy[1:])
+                        else:
+                            new_ai_rhs.append(delta+ajy[1:])
+                else:
+                    new_ai_rhs.append(ajy)
+            print 'new_ai_rhs =>', new_ai_rhs
+            ai_ = __strip_im_left_recr__((ai_lhs, new_ai_rhs), nonterminals)
+            print 'ai_ =>', ai_
+            for lhs in ai_:
+                if lhs not in nonterminals:
+                    nonterminals.append(lhs)
+                    rules[lhs] = [None, ai_[lhs]]
+                else:
+                    rules[lhs] = [rules[ai_lhs][0], ai_[lhs]]
+            print 'rules =>', rules
 
 def yacc():
     """return a LL1"""
@@ -120,7 +135,7 @@ def yacc():
             if not raw_rule:
                 raise SyntaxError(
                     '`%s` recognised as a grammar proccessing function \
-                    but no docstring found' % var.__name__
+                    but no docstring found' % func.__name__
                 )
             rp_rule = raw_rule.split(':')
             if len(rp_rule) != 2:
