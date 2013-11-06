@@ -31,9 +31,9 @@ class TokenStream:
         self.__cache__ = token
 
 
-class LL1:
-    """a defined LL(1) CFG"""
-    def __init__(self, rules, precedences, terminals):
+class LL1Parser:
+    """a defined LL(1) CFG Parser"""
+    def __init__(self, lexer, rules, precedences, terminals, nonterminals):
         """
         `rules` is a map from a non-terminal to a set of possible
         replacement and each replacement is a two-element list, of which
@@ -42,20 +42,70 @@ class LL1:
         non-terminal
         """
         self.__stream__ = None
+        self.__lexer__ = lexer
         self.__rules__ = rules
         self.__precedences__ = precedences
         self.__terminals__ = terminals
+        self.__nonterminals__ = nonterminals
+        len_nont = 0
+        new_len_nont = len(self.__nonterminals__)
+        while True:
+            for i in range(len_nont, new_len_nont):
+                self.__extract_left_common_factor__(self.__nonterminals__[i])
+            len_nont = new_len_nont
+            new_len_nont = len(self.__nonterminals__)
+            if new_len_nont == len_nont:
+                break
+    @staticmethod
+    def __max_leading_intersection__(list1, list2):
+        """return then max leading intersection of list1 and list2"""
+        if len(list1) > len(list2):
+            list1, list2 = list2, list1
+        for i in range(len(list1), -1, -1):
+            if list1[:i] == list2[:i]:
+                return list1[:i]
+        return []
+    def __max_lcf__(self, lhs):
+        """
+        find max left common factor of lhs, if thers's none,
+        return empty list
+        """
+        common_factor = []
+        all_rhs = self.__rules__[lhs][1]
+        for i in range(len(all_rhs)):
+            for j in range(i+1, len(all_rhs)):
+                lcf = LL1Parser.__max_leading_intersection__(
+                    all_rhs[i], all_rhs[j]
+                )
+                if len(lcf) > len(common_factor):
+                    common_factor = lcf
+        return common_factor
+    def __extract_left_common_factor__(self, lhs):
+        """
+        extract left common factor of lhs
+        """
+        alpha = self.__max_lcf__(lhs)
+        while alpha:
+            len_alpha = len(alpha)
+            lhs_ = lhs + '\''
+            while lhs_ in self.__nonterminals__:
+                lhs_ += '\''
+            new_all_rhs1 = [alpha+[lhs_]]
+            all_rhs_1 = []
+            for rhs in self.__rules__[lhs][1]:
+                if alpha == rhs[:len_alpha]:
+                    all_rhs_1.append(rhs[len_alpha:] \
+                        if len_alpha < len(rhs) else ['epsilon'])
+                else:
+                    new_all_rhs1.append(rhs)
+            self.__rules__[lhs_] = [None, all_rhs_1]
+            self.__nonterminals__.append(lhs_)
+            self.__rules__[lhs][1] = new_all_rhs1
+            alpha = self.__max_lcf__(lhs)
     def parse(self, string):
         """parse the string"""
-        import sys
-        all_vars = sys._getframe(1).f_locals
-        if 'lexer' not in all_vars:
-            raise NotImplementedError(
-                'Yacc need variable `lexer` but not defined'
-            )
-        lexer = all_vars['lexer']
-        lexer.set_string(string)
-        self.__stream__ = TokenStream(lexer)
+        self.__lexer__.set_string(string)
+        self.__stream__ = TokenStream(self.__lexer__)
 
 def __strip_im_left_recr__(rule, nonterminals):
     """
@@ -108,21 +158,23 @@ def __strip_left_recr__(rules, nonterminals):
                             new_ai_rhs.append(delta+ajy[1:])
                 else:
                     new_ai_rhs.append(ajy)
-            print 'new_ai_rhs =>', new_ai_rhs
             ai_ = __strip_im_left_recr__((ai_lhs, new_ai_rhs), nonterminals)
-            print 'ai_ =>', ai_
             for lhs in ai_:
                 if lhs not in nonterminals:
                     nonterminals.append(lhs)
                     rules[lhs] = [None, ai_[lhs]]
                 else:
                     rules[lhs] = [rules[ai_lhs][0], ai_[lhs]]
-            print 'rules =>', rules
 
 def yacc():
-    """return a LL1"""
+    """return a Parser"""
     import sys
     all_vars = sys._getframe(1).f_locals
+    if 'lexer' not in all_vars:
+        raise NotImplementedError(
+            'Yacc need variable `lexer` but not defined'
+        )
+    lexer = all_vars['lexer']
     terminals = all_vars['tokens']
     nonterminals = set()
     rules = {}
@@ -155,4 +207,4 @@ def yacc():
             rules[lhs].add((func, replacements,))
     nonterminals = list(nonterminals)
     __strip_left_recr__(rules, nonterminals)
-    return LL1(rules, precedences, terminals)
+    return LL1Parser(lexer, rules, precedences, terminals, list(nonterminals))
