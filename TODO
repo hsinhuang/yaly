@@ -1,5 +1,7 @@
 The YALY to-do list:
 
+0. 重构Rules的表示方法，进行封装
+
 0. 提取左公因子
 
 1. FIRST和FOLLOW
