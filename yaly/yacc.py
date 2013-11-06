@@ -84,6 +84,22 @@ class Rule:
     def rhs(self):
         """getter : list of rhs identifiers in this rule"""
         return self.__rhs__
+    def rinsert(self, term):
+        """insert a term in the rightmost position of rhs"""
+        assert type(term) == str and (term.isupper() or term.islower())
+        self.__rhs__.append(term)
+    def linsert(self, term):
+        """insert a term in the leftmost position of rhs"""
+        assert type(term) == str and (term.isupper() or term.islower())
+        self.__rhs__.insert(0, term)
+    def rremove(self):
+        """remove a term in the rightmost position of rhs"""
+        assert self.__rhs__
+        return self.__rhs__.pop()
+    def lremove(self):
+        """remove a term in the leftmost position of rhs"""
+        assert self.__rhs__
+        self.__rhs__.remove(self.__rhs__[0])
 
 class CompleteRule:
     """a grammar rule for a nonterminal"""
@@ -127,6 +143,7 @@ class CompleteRule:
 
 class Rules:
     """a container of all CompleteRule's"""
+    EPSILON = 'epsilon'
     def __init__(self):
         self.__rules__ = {}
         self.__terminals__ = set()
@@ -167,6 +184,71 @@ class Rules:
     def setdefault(self, lhs):
         """set default map value of lhs"""
         self.__rules__.setdefault(lhs, CompleteRule(lhs))
+    def add(self, rule):
+        """add a new Rule"""
+        lhs = rule.lhs()
+        if lhs not in self:
+            self.setdefault(lhs)
+        self[lhs].add(rule)
+    def strip_im_left_recr__(self, complete_rule):
+        """
+        strip all the immediate left recursion in the CompleteRule
+
+        return a two-element tuple containing stripped CompleteRule
+        """
+        left_recr = []
+        non_left_recr = []
+        for rule in complete_rule:
+            if rule.rhs()[0] == complete_rule.lhs():
+                left_recr.append(rule)
+            else:
+                non_left_recr.append(rule)
+        lhs_ = complete_rule.lhs() + '\''
+        while lhs_ in self.nonterminals():
+            lhs_ += '\''
+        c_rule_a = CompleteRule(complete_rule.lhs())
+        c_rule_a_ =CompleteRule(lhs_)
+        import copy
+        for beta in non_left_recr:
+            if len(beta) == 1 and beta[0] == Rules.EPSILON:
+                betaa_ = copy.deepcopy(beta)
+                betaa_.rinsert(lhs_)
+                c_rule_a.add(betaa_)
+            else:
+                rules[lhs].append(beta+[lhs_])
+        rules[lhs_] = [ ['epsilon'] ]
+        for a_alpha in left_recr:
+            rules[lhs_].append(a_alpha[1:]+[lhs_])
+        return rules
+    def strip_left_recr(self):
+        """
+        strip all the left recursion in the rules
+
+        return a new rule
+        """
+        length = len(nonterminals)
+        for i in range(length):
+            for j in range(i):
+                ai_lhs, aj_lhs = nonterminals[i], nonterminals[j]
+                ai_rhs, aj_rhs = [rhs for rhs in rules[ai_lhs][1]], \
+                    [rhs for rhs in rules[aj_lhs][1]]
+                new_ai_rhs = []
+                for ajy in ai_rhs:
+                    if ajy[0] == aj_lhs:
+                        for delta in aj_rhs:
+                            if len(delta) == 1 and delta[0] == 'epsilon':
+                                new_ai_rhs.append(ajy[1:])
+                            else:
+                                new_ai_rhs.append(delta+ajy[1:])
+                    else:
+                        new_ai_rhs.append(ajy)
+                ai_ = __strip_im_left_recr__((ai_lhs, new_ai_rhs), nonterminals)
+                for lhs in ai_:
+                    if lhs not in nonterminals:
+                        nonterminals.append(lhs)
+                        rules[lhs] = [None, ai_[lhs]]
+                    else:
+                        rules[lhs] = [rules[ai_lhs][0], ai_[lhs]]
 
 class LL1Parser:
     """a defined LL(1) CFG Parser"""
@@ -245,65 +327,6 @@ class LL1Parser:
         """parse the string"""
         self.__lexer__.set_string(string)
         self.__stream__ = TokenStream(self.__lexer__)
-
-def __strip_im_left_recr__(rule, nonterminals):
-    """
-    strip all the immediate left recursion in the rule
-
-    `rule`: a tuple -- the first element is the lhs of the rule,
-    the second element is a list of all rhs'
-
-    return the stripped rules -- a map from a non-terminal to a list of
-    possible rhs and each rhs is a list of possible replacement
-    """
-    left_recr = []
-    non_left_recr = []
-    lhs = rule[0]
-    for rhs in rule[1]:
-        if rhs[0] == lhs:
-            left_recr.append(rhs)
-        else:
-            non_left_recr.append(rhs)
-    lhs_ = lhs + '\''
-    while lhs_ in nonterminals:
-        lhs_ += '\''
-    rules = {}
-    rules[lhs] = []
-    for beta in non_left_recr:
-        if len(beta) == 1 and beta[0] == 'epsilon':
-            rules[lhs].append([lhs_])
-        else:
-            rules[lhs].append(beta+[lhs_])
-    rules[lhs_] = [ ['epsilon'] ]
-    for a_alpha in left_recr:
-        rules[lhs_].append(a_alpha[1:]+[lhs_])
-    return rules
-
-def __strip_left_recr__(rules, nonterminals):
-    """strip all the left recursion in the rules"""
-    length = len(nonterminals)
-    for i in range(length):
-        for j in range(i):
-            ai_lhs, aj_lhs = nonterminals[i], nonterminals[j]
-            ai_rhs, aj_rhs = [rhs for rhs in rules[ai_lhs][1]], \
-                [rhs for rhs in rules[aj_lhs][1]]
-            new_ai_rhs = []
-            for ajy in ai_rhs:
-                if ajy[0] == aj_lhs:
-                    for delta in aj_rhs:
-                        if len(delta) == 1 and delta[0] == 'epsilon':
-                            new_ai_rhs.append(ajy[1:])
-                        else:
-                            new_ai_rhs.append(delta+ajy[1:])
-                else:
-                    new_ai_rhs.append(ajy)
-            ai_ = __strip_im_left_recr__((ai_lhs, new_ai_rhs), nonterminals)
-            for lhs in ai_:
-                if lhs not in nonterminals:
-                    nonterminals.append(lhs)
-                    rules[lhs] = [None, ai_[lhs]]
-                else:
-                    rules[lhs] = [rules[ai_lhs][0], ai_[lhs]]
 
 def yacc():
     """return a Parser"""
