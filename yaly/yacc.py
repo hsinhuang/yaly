@@ -164,16 +164,21 @@ class Rules:
                 [self[lhs].nonterminals() for lhs in self],
                 set())
         return self.__nonterminals__
+    def setdefault(self, lhs):
+        """set default map value of lhs"""
+        self.__rules__.setdefault(lhs, CompleteRule(lhs))
 
 class LL1Parser:
     """a defined LL(1) CFG Parser"""
-    def __init__(self, lexer, rules, precedences, terminals, nonterminals):
+    def __init__(self, lexer, rules, precedences=None):
         """
-        `rules` is a map from a non-terminal to a set of possible
-        replacement and each replacement is a two-element list, of which
-        the first element is a proccessing fucntion, the second is a
-        list of terminals or non-terminals that can replace the
-        non-terminal
+        `rules` is a Rules, and `precedences` is a tuple or list
+        where tokens are ordered from lowest to highest precedence
+
+        e.g.    precedence = (
+                    ('left', 'PLUS', 'MINUS'),
+                    ('left', 'TIMES', 'DIVIDE'),
+                )
         """
         self.__stream__ = None
         self.__lexer__ = lexer
@@ -309,36 +314,21 @@ def yacc():
             'Yacc need variable `lexer` but not defined'
         )
     lexer = all_vars['lexer']
-    terminals = all_vars['tokens']
-    nonterminals = set()
-    rules = {}
+    rules = Rules()
     precedences = None if 'precedences' not in all_vars \
         else all_vars['precedences']
     import inspect
     for func in all_vars:
         if inspect.isfunction(func) and func.__name__.startswith('p_'):
             raw_rule = func.__doc__
-            if not raw_rule:
-                raise SyntaxError(
-                    '`%s` recognised as a grammar proccessing function \
-                    but no docstring found' % func.__name__
-                )
-            rp_rule = raw_rule.split(':')
-            if len(rp_rule) != 2:
-                raise SyntaxError(
-                    'Syntax rule `%s` not valid' % raw_rule
-                )
-            lhs, rhs = rp_rule[0].strip(), rp_rule[1].strip()
-            import re
-            replacements = re.split(r'\s+', rhs)
-            if not all([s.isupper() or s.islower() for s in replacements]):
-                raise SyntaxError(
-                    'every identifier in rules should be uppercase \
-                    or lowercase'
-                )
-            nonterminals.update([s for s in replacements if s.islower()])
-            rules.setdefault(lhs, set())
-            rules[lhs].add((func, replacements,))
-    nonterminals = list(nonterminals)
-    __strip_left_recr__(rules, nonterminals)
-    return LL1Parser(lexer, rules, precedences, terminals, list(nonterminals))
+            rule = Rule(raw_rule, func)
+            rules.setdefault(rule.lhs())
+            rules[rule.lhs()].add(rule)
+    tokens = set(all_vars['tokens'])
+    for term in rules.terminals():
+        if term not in tokens:
+            raise NameError(
+                'terminal `%s` not defined as a token' % term
+            )
+    __strip_left_recr__(rules, rules.nonterminals())
+    return LL1Parser(lexer, rules, precedences)
