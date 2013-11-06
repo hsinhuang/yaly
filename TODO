@@ -1,8 +1,6 @@
 The YALY to-do list:
 
-0. 重构Rules的表示方法，进行封装
-
-0. 提取左公因子
+0. 把消除左递归函数和提取公因子修改并封装，其中提取左公因子的方法还有bug
 
 1. FIRST和FOLLOW
 
