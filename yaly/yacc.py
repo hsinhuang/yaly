@@ -3,6 +3,9 @@
 
 """syntax analysis"""
 
+__EPSILON__ = 'epsilon'
+__END__ = '$'
+
 class TokenStream:
     """an input stream of tokens, read from a string"""
     def __init__(self, lexer):
@@ -81,18 +84,18 @@ class Rule:
     @staticmethod
     def is_terminal(term):
         """whether the term is terminal"""
-        return term.isupper()
+        return term.isupper() or term == __EPSILON__
     @staticmethod
     def is_nonterminal(term):
         """whether the term is nonterminal"""
-        return term.islower()
+        return term.islower() and term != __EPSILON__
     @staticmethod
     def is_valid_term(term):
         """whether the term is valid"""
         return Rule.is_nonterminal(term) or Rule.is_terminal(term)
     def is_epsilon(self):
         """check whether a Rule is epsilon"""
-        return self.__rhs__ == [ 'epsilon' ]
+        return self.__rhs__ == [ __EPSILON__ ]
     def terminals(self):
         """getter : terminals in this rule"""
         return self.__terminals__
@@ -132,6 +135,8 @@ class CompleteRule:
         self.__rules__ = set()
         self.__terminals__ = set()
         self.__nonterminals__ = { self.__lhs__ }
+        self.__first__ = set()
+        self.__follow__ = set()
     def __iter__(self):
         return self.__rules__.__iter__()
     def __eq__(self, other):
@@ -153,6 +158,8 @@ class CompleteRule:
         self.__rules__.add(rule)
         self.__terminals__.update(rule.terminals())
         self.__nonterminals__.update(rule.nonterminals())
+        self.__first__ = set()
+        self.__follow__ = set()
         return self
     def terminals(self):
         """getter : terminals in all rules"""
@@ -169,6 +176,27 @@ class CompleteRule:
     def remove(self, rule):
         """remove a rule"""
         self.__rules__.remove(rule)
+        self.__first__ = set()
+        self.__follow__ = set()
+    def first(self, rules):
+        """return FIRST set of term"""
+        if not self.__first__:
+            first_set = set()
+            for rule in self:
+                if rule.is_epsilon():
+                    first_set.add(__EPSILON__)
+                else:
+                    rule_rhs = rule.rhs()
+                    end = True
+                    for term in rule_rhs:
+                        first_set.update(rules.first(term))
+                        if __EPSILON__ not in rules.first(term):
+                            end = False
+                            break
+                    if end:
+                        first_set.add(__EPSILON__)
+            self.__first__ = first_set
+        return self.__first__
 
 class Rules:
     """a container of all CompleteRule's"""
@@ -176,6 +204,8 @@ class Rules:
         self.__rules__ = {}
         self.__terminals__ = set()
         self.__nonterminals__ = set()
+        self.__start__ = None # CompleteRule
+        self.__follows__ = {}
     def __getitem__(self, lhs):
         self.__terminals__ = None
         self.__nonterminals__ = None
@@ -199,6 +229,19 @@ class Rules:
         return '\n'.join([self[lhs].__str__() for lhs in self])
     def __hash__(self):
         return self.__str__().__hash__()
+    def is_start(self, term):
+        """check whether the term is a start symbol"""
+        if not self.__start__:
+            return False
+        return self.__start__.lhs() == term
+    def start_symbol(self):
+        """getter : start symbol"""
+        if not self.__start__:
+            return None
+        return self.__start__.lhs()
+    def set_start_rule(self, rule):
+        """setter : start symbol"""
+        self.__start__ = self[rule.lhs()]
     def terminals(self):
         """getter : terminals in all rules"""
         if not self.__terminals__:
@@ -221,6 +264,52 @@ class Rules:
         lhs = rule.lhs()
         self.setdefault(lhs)
         self[lhs].add(rule)
+    def first(self, term):
+        """return FIRST set of term"""
+        if Rule.is_terminal(term):
+            return { term }
+        import copy
+        return copy.deepcopy(self[term].first(self))
+    def follows(self):
+        """calculate FOLLOW sets of all nonterminals"""
+        assert self.__start__
+        new_follows = {}
+        for term in self:
+            new_follows.setdefault(term, set())
+            self.__follows__.setdefault(term, set())
+        new_follows[self.start_symbol()].add(__END__)
+        for nonterm in self:
+            com_rule = self[nonterm]
+            for rule in com_rule:
+                rule_rhs = rule.rhs()
+                for i, term in enumerate(rule_rhs):
+                    if Rule.is_terminal(term):
+                        continue
+                    j = i+1
+                    while j < len(rule_rhs):
+                        end = True
+                        first_beta = self.first(rule_rhs[j])
+                        if __EPSILON__ in first_beta:
+                            end = False
+                            first_beta.remove(__EPSILON__)
+                        new_follows[term].update(first_beta)
+                        if end:
+                            break
+                        else:
+                            j += 1
+                    if j == len(rule_rhs):
+                        new_follows[term].update(self.__follows__[rule.lhs()])
+        return new_follows
+    def follow(self, term):
+        """return FOLLOW set of term"""
+        assert Rule.is_nonterminal(term)
+        if not self.__follows__:
+            new_follows = self.follows()
+            while new_follows != self.__follows__:
+                self.__follows__ = new_follows
+                new_follows = self.follows()
+        import copy
+        return copy.deepcopy(self.__follows__[term])
 
 class LL1Parser:
     """a defined LL(1) CFG Parser"""
