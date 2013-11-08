@@ -266,6 +266,14 @@ class Rules:
         self[lhs].add(rule)
     def first(self, term):
         """return FIRST set of term"""
+        if type(term) == tuple or type(term) == list:
+            if not term:
+                return set()
+            if Rule.is_terminal(term[0]) and \
+                __EPSILON__ in self.first(term[0]):
+                return self.first(term[0]).union(self.first(term[1:]))
+            else:
+                return self.first(term[0])
         if Rule.is_terminal(term):
             return { term }
         import copy
@@ -327,6 +335,22 @@ class LL1Parser:
         self.__lexer__ = lexer
         self.__rules__ = rules
         self.__precedences__ = precedences
+        self.__parsing_table__ = {}
+        for nonterm in self.__rules__.nonterminals():
+            self.__parsing_table__.setdefault(nonterm, {})
+            self.__parsing_table__[nonterm].setdefault(__END__, set())
+            for term in self.__rules__.terminals():
+                self.__parsing_table__[nonterm].setdefault(term, set())
+        for nonterm in self.__rules__:
+            com_rule = self.__rules__[nonterm]
+            for rule in com_rule:
+                if __EPSILON__ in self.__rules__.first(rule.rhs()):
+                    for term in self.__rules__.follow(rule.lhs()):
+                        self.__parsing_table__[nonterm][term].add(rule)
+                    continue
+                for term in self.__rules__.first(rule.rhs()):
+                    if Rule.is_terminal(term):
+                        self.__parsing_table__[nonterm][term].add(rule)
     def parse(self, string):
         """parse the string"""
         self.__lexer__.set_string(string)
