@@ -205,7 +205,6 @@ class CompleteRule:
         nonterminals = set(nonterminals)
         import copy
         while cfactor:
-            print 'common_factor =>', cfactor
             lhs_ = lhs + '\''
             while lhs_ in nonterminals:
                 lhs_ += '\''
@@ -369,9 +368,7 @@ class LL1Parser:
         """
         self.__stream__ = None
         self.__lexer__ = lexer
-        self.__rules__ = rules.strip_left_recr()
-        for crule in self.__rules__:
-            crule.extract_common_factor(self.__rules__.nonterminals())
+        self.__rules__ = rules
         self.__precedences__ = precedences
     def parse(self, string):
         """parse the string"""
@@ -394,13 +391,11 @@ def yacc():
     precedences = None if 'precedences' not in all_vars \
         else all_vars['precedences']
     import inspect
-    print 'hello'
     for func_name in all_vars:
         if not func_name.startswith('p_'):
             continue
         func = all_vars[func_name]
         if inspect.isfunction(func):
-            print func.__name__
             raw_rule = func.__doc__
             if raw_rule.find('\'') != -1:
                 raise SyntaxWarning(
@@ -415,5 +410,4 @@ def yacc():
             raise NameError(
                 'terminal `%s` not defined as a token' % term
             )
-    print lexer, rules, precedences
     return LL1Parser(lexer, rules, precedences)
