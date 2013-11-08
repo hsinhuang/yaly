@@ -1,3 +1,5 @@
+%loadpy yacc.py
+
 r0 = Rule('s : q C', 0)
 r1 = Rule('s : C', 1)
 r2 = Rule('q : r B', 2)
@@ -16,3 +18,5 @@ rules.add(r5)
 print rules
 
 new_rules = rules.strip_left_recr()
+
+print new_rules
