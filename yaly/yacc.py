@@ -151,6 +151,52 @@ class CompleteRule:
     def rules(self):
         """getter : all rules"""
         return self.__rules__
+    @staticmethod
+    def __common_factor__(rule1, rule2):
+        """return common factor of rule1 and rule2"""
+        list1, list2 = rule1.rhs(), rule2.rhs()
+        if len(list1) > len(list2):
+            list1, list2 = list2, list1
+        for i in range(len(list1)):
+            if list1[i] != list2[i]:
+                return list1[:i]
+        return list1
+    def common_factor(self):
+        """
+        return a left common factor (a list) exists in no less than
+        two Rule's.
+        return empty list if there is none.
+        """
+        factor = []
+        rules = list(self.__rules__)
+        for i in range(len(rules)):
+            for j in range(i):
+                new_factor = CompleteRule.__common_factor__(rules[i], rules[j])
+                if len(new_factor) > len(factor):
+                    factor = new_factor
+        return factor
+    def extract_common_factor(self, nonterminals):
+        """
+        return a list of several CompleteRule's, which is equivalent
+        to this CompleteRule but has no common factor
+        """
+        import copy
+        new_crule = copy.deepcopy(self)
+        new_crules = [ new_crule ]
+        cfactor = new_crule.common_factor()
+        nonterminals = set(nonterminals)
+        while cfactor:
+            len_fact = len(cfactor)
+            for rule in self:
+                if rule.rhs()[:len_fact] == cfactor:
+                    pass
+                else:
+                    pass
+            # while lhs_ in nonterminals:
+            #     lhs_ += '\''
+            # nonterminals.add(lhs_)
+            cfactor = new_crule.common_factor()
+        return new_crules
 
 class Rules:
     """a container of all CompleteRule's"""
@@ -203,12 +249,14 @@ class Rules:
         lhs = rule.lhs()
         self.setdefault(lhs)
         self[lhs].add(rule)
-    def strip_im_left_recr(self, complete_rule):
+    def strip_im_left_recr(self, complete_rule, nonterminals=None):
         """
         strip all the immediate left recursion in the CompleteRule
 
         return a two-element tuple containing stripped CompleteRule
         """
+        if not nonterminals:
+            nonterminals = self.nonterminals()
         left_recr = []
         non_left_recr = []
         for rule in complete_rule:
@@ -219,7 +267,7 @@ class Rules:
         if not left_recr:
             return (complete_rule, complete_rule)
         lhs_ = complete_rule.lhs() + '\''
-        while lhs_ in self.nonterminals():
+        while lhs_ in nonterminals:
             lhs_ += '\''
         c_rule_a = CompleteRule(complete_rule.lhs())
         c_rule_a_ = CompleteRule(lhs_)
@@ -274,7 +322,7 @@ class Rules:
                     else:
                         new_ai.add(copy.deepcopy(aj_gamma))
                 stripped_ai, stripped_ai_ = \
-                    new_rules.strip_im_left_recr(new_ai)
+                    new_rules.strip_im_left_recr(new_ai, self.nonterminals())
                 new_rules[stripped_ai.lhs()] = stripped_ai
                 new_rules[stripped_ai_.lhs()] = stripped_ai_
         return new_rules
@@ -306,30 +354,6 @@ class LL1Parser:
             new_len_nont = len(self.__nonterminals__)
             if new_len_nont == len_nont:
                 break
-    @staticmethod
-    def __max_leading_intersection__(list1, list2):
-        """return then max leading intersection of list1 and list2"""
-        if len(list1) > len(list2):
-            list1, list2 = list2, list1
-        for i in range(len(list1), -1, -1):
-            if list1[:i] == list2[:i]:
-                return list1[:i]
-        return []
-    def __max_lcf__(self, lhs):
-        """
-        find max left common factor of lhs, if thers's none,
-        return empty list
-        """
-        common_factor = []
-        all_rhs = self.__rules__[lhs][1]
-        for i in range(len(all_rhs)):
-            for j in range(i+1, len(all_rhs)):
-                lcf = LL1Parser.__max_leading_intersection__(
-                    all_rhs[i], all_rhs[j]
-                )
-                if len(lcf) > len(common_factor):
-                    common_factor = lcf
-        return common_factor
     def __extract_left_common_factor__(self, lhs):
         """
         extract left common factor of lhs
