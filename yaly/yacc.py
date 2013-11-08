@@ -216,6 +216,8 @@ class Rules:
                 left_recr.append(rule)
             else:
                 non_left_recr.append(rule)
+        if not left_recr:
+            return (complete_rule, complete_rule)
         lhs_ = complete_rule.lhs() + '\''
         while lhs_ in self.nonterminals():
             lhs_ += '\''
@@ -248,25 +250,31 @@ class Rules:
         new_rules = Rules()
         nonterminals = list(self.nonterminals())
         for i in range(len(nonterminals)):
+            if i == 0:
+                ai_lhs = nonterminals[i]
+                new_rules[ai_lhs] = self[ai_lhs]
+                continue
             for j in range(i):
                 ai_lhs, aj_lhs = nonterminals[i], nonterminals[j]
-                ai_rhs, aj_rhs = self[ai_lhs], self[aj_lhs]
+                ai_rhs, aj_rhs = self[ai_lhs], new_rules[aj_lhs]
                 new_ai = CompleteRule(ai_lhs)
+                import copy
                 for aj_gamma in ai_rhs:
                     if aj_gamma.rhs()[0] == aj_lhs:
-                        import copy
                         gamma = copy.deepcopy(aj_gamma)
                         gamma.lremove()
                         for delta in aj_rhs:
                             if delta.is_epsilon():
-                                new_ai.add(gamma)
+                                new_ai.add(copy.deepcopy(gamma))
                             else:
+                                new_gamma = copy.deepcopy(gamma)
                                 for rh_elem in delta.rhs()[::-1]:
-                                    gamma.linsert(rh_elem)
-                                new_ai.add(gamma)
+                                    new_gamma.linsert(rh_elem)
+                                new_ai.add(new_gamma)
                     else:
-                        new_ai.add(aj_gamma)
-                stripped_ai, stripped_ai_ = self.strip_im_left_recr(new_ai)
+                        new_ai.add(copy.deepcopy(aj_gamma))
+                stripped_ai, stripped_ai_ = \
+                    new_rules.strip_im_left_recr(new_ai)
                 new_rules[stripped_ai.lhs()] = stripped_ai
                 new_rules[stripped_ai_.lhs()] = stripped_ai_
         return new_rules
@@ -365,6 +373,10 @@ def yacc():
     for func in all_vars:
         if inspect.isfunction(func) and func.__name__.startswith('p_'):
             raw_rule = func.__doc__
+            if raw_rule.find('\'') != -1:
+                raise SyntaxWarning(
+                    'no single quote mark is allowed in grammar, but found \
+                    `%s` in `%s`' % (raw_rule, func.__name__))
             rule = Rule(raw_rule, func)
             rules.setdefault(rule.lhs())
             rules[rule.lhs()].add(rule)
