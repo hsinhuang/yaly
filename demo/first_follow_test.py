@@ -43,3 +43,5 @@ rules.follow('t\'')
 # >>> set(['PLUS', 'RPAREN', '$'])
 rules.follow('f')
 # >>> set(['PLUS', 'RPAREN', '$', 'TIMES'])
+
+parser = LL1Parser(None, rules)
