@@ -63,7 +63,7 @@ stmt : SEMI
 exprs : epsilon
 exprs : expr more_exprs
 more_exprs : epsilon
-more_exprs : COMMA more_exprs
+more_exprs : COMMA expr more_exprs
 
 assg : ID ASSIGN expr
 assg : ID LBRACKET expr RBRACKET ASSIGN expr
