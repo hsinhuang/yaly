@@ -36,19 +36,22 @@ class Rule:
     """
     def __init__(self, rule_spec, func):
         """
-        `rule_spec` is a string which specifies the rule
-
-        format: `lhs : t1 t2 t3 ...`
+        `rule_spec` is a string or tuple which specifies the rule
+        format: 'lhs : t1 t2 t3 ...' or ('lhs', ['t1', 't2', 't3', ...])
         """
+        assert type(rule_spec) == str or type(rule_spec) == tuple
         self.__func__ = func
-        rp_rule = rule_spec.split(':')
+        rp_rule = rule_spec.split(':') if type(rule_spec) == str \
+            else rule_spec
         if len(rp_rule) != 2:
             raise SyntaxError(
                 'Syntax rule `%s` not valid' % rule_spec
             )
-        self.__lhs__, rhs = rp_rule[0].strip(), rp_rule[1].strip()
+        self.__lhs__, rhs = rp_rule[0].strip(), rp_rule[1].strip() \
+            if type(rule_spec) == str else rp_rule[0]
         import re
-        self.__rhs__ = re.split(r'\s+', rhs)
+        self.__rhs__ = re.split(r'\s+', rhs) \
+            if type(rule_spec) == str else rp_rule[1]
         if not all([s.isupper() or s.islower() \
             for s in self.__rhs__] + [self.__lhs__.islower()]):
             raise SyntaxError(
@@ -74,7 +77,7 @@ class Rule:
     @staticmethod
     def epsilon(lhs, func):
         """make an epsilon Rule"""
-        return Rule('%s : epsilon' % lhs, func)
+        return Rule((lhs, ['epsilon']), func)
     def is_epsilon(self):
         """check whether a Rule is epsilon"""
         return self.__rhs__ == [ 'epsilon' ]
@@ -151,6 +154,9 @@ class CompleteRule:
     def rules(self):
         """getter : all rules"""
         return self.__rules__
+    def remove(self, rule):
+        """remove a rule"""
+        self.__rules__.remove(rule)
     @staticmethod
     def __common_factor__(rule1, rule2):
         """return common factor of rule1 and rule2"""
@@ -180,23 +186,33 @@ class CompleteRule:
         return a list of several CompleteRule's, which is equivalent
         to this CompleteRule but has no common factor
         """
-        import copy
-        new_crule = copy.deepcopy(self)
-        new_crules = [ new_crule ]
-        cfactor = new_crule.common_factor()
+        lhs = self.__lhs__
+        new_a = self
+        new_crules = [ ]
+        cfactor = new_a.common_factor()
         nonterminals = set(nonterminals)
+        import copy
         while cfactor:
+            print 'common_factor =>', cfactor
+            lhs_ = lhs + '\''
+            while lhs_ in nonterminals:
+                lhs_ += '\''
+            nonterminals.add(lhs_)
+            new_a_ = CompleteRule(lhs_)
+            new_crules.append(new_a_)
             len_fact = len(cfactor)
-            for rule in self:
-                if rule.rhs()[:len_fact] == cfactor:
-                    pass
-                else:
-                    pass
-            # while lhs_ in nonterminals:
-            #     lhs_ += '\''
-            # nonterminals.add(lhs_)
-            cfactor = new_crule.common_factor()
-        return new_crules
+            new_a_tmp = copy.deepcopy(new_a)
+            for rule in new_a:
+                rule_rhs = rule.rhs()
+                if rule_rhs[:len_fact] == cfactor:
+                    new_a_tmp.remove(rule)
+                    new_a_.add(Rule.epsilon(lhs_, None) \
+                        if len_fact == len(rule_rhs) \
+                        else Rule((lhs_, rule_rhs[len_fact:]), None))
+            new_a = new_a_tmp
+            new_a.add(Rule((lhs, cfactor+[lhs_]), None))
+            cfactor = new_a.common_factor()
+        return [ new_a ] + new_crules
 
 class Rules:
     """a container of all CompleteRule's"""
