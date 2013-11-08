@@ -1,6 +1,6 @@
 The YALY to-do list:
 
-0. 把提取公因子修改并封装，其中提取左公因子的方法还有bug
+0. 进一步完善提取公因子的方法
 
 1. FIRST和FOLLOW
 
