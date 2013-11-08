@@ -242,9 +242,6 @@ class LL1Parser:
         """parse the string"""
         self.__lexer__.set_string(string)
         self.__stream__ = TokenStream(self.__lexer__)
-    def rules(self):
-        """getter : rules"""
-        return self.__rules__
 
 def yacc():
     """return a Parser"""
