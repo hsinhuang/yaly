@@ -369,45 +369,17 @@ class LL1Parser:
         """
         self.__stream__ = None
         self.__lexer__ = lexer
-        self.__rules__ = rules
+        self.__rules__ = rules.strip_left_recr()
+        for crule in self.__rules__:
+            crule.extract_common_factor(self.__rules__.nonterminals())
         self.__precedences__ = precedences
-        self.__terminals__ = terminals
-        self.__nonterminals__ = nonterminals
-        len_nont = 0
-        new_len_nont = len(self.__nonterminals__)
-        while True:
-            for i in range(len_nont, new_len_nont):
-                self.__extract_left_common_factor__(self.__nonterminals__[i])
-            len_nont = new_len_nont
-            new_len_nont = len(self.__nonterminals__)
-            if new_len_nont == len_nont:
-                break
-    def __extract_left_common_factor__(self, lhs):
-        """
-        extract left common factor of lhs
-        """
-        alpha = self.__max_lcf__(lhs)
-        while alpha:
-            len_alpha = len(alpha)
-            lhs_ = lhs + '\''
-            while lhs_ in self.__nonterminals__:
-                lhs_ += '\''
-            new_all_rhs1 = [alpha+[lhs_]]
-            all_rhs_1 = []
-            for rhs in self.__rules__[lhs][1]:
-                if alpha == rhs[:len_alpha]:
-                    all_rhs_1.append(rhs[len_alpha:] \
-                        if len_alpha < len(rhs) else ['epsilon'])
-                else:
-                    new_all_rhs1.append(rhs)
-            self.__rules__[lhs_] = [None, all_rhs_1]
-            self.__nonterminals__.append(lhs_)
-            self.__rules__[lhs][1] = new_all_rhs1
-            alpha = self.__max_lcf__(lhs)
     def parse(self, string):
         """parse the string"""
         self.__lexer__.set_string(string)
         self.__stream__ = TokenStream(self.__lexer__)
+    def rules(self):
+        """getter : rules"""
+        return self.__rules__
 
 def yacc():
     """return a Parser"""
@@ -422,8 +394,13 @@ def yacc():
     precedences = None if 'precedences' not in all_vars \
         else all_vars['precedences']
     import inspect
-    for func in all_vars:
-        if inspect.isfunction(func) and func.__name__.startswith('p_'):
+    print 'hello'
+    for func_name in all_vars:
+        if not func_name.startswith('p_'):
+            continue
+        func = all_vars[func_name]
+        if inspect.isfunction(func):
+            print func.__name__
             raw_rule = func.__doc__
             if raw_rule.find('\'') != -1:
                 raise SyntaxWarning(
@@ -438,5 +415,5 @@ def yacc():
             raise NameError(
                 'terminal `%s` not defined as a token' % term
             )
-    __strip_left_recr__(rules, rules.nonterminals())
+    print lexer, rules, precedences
     return LL1Parser(lexer, rules, precedences)
