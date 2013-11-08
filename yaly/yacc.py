@@ -52,8 +52,8 @@ class Rule:
         import re
         self.__rhs__ = re.split(r'\s+', rhs) \
             if type(rule_spec) == str else rp_rule[1]
-        if not all([s.isupper() or s.islower() \
-            for s in self.__rhs__] + [self.__lhs__.islower()]):
+        if not all([ Rule.is_valid_term(s) for s in self.__rhs__] + \
+            [ Rule.is_nonterminal(self.__lhs__) ]):
             raise SyntaxError(
                 'terminals in rules should be uppercase, \
                 while nonterminals in rules should be lowercase'
@@ -61,7 +61,7 @@ class Rule:
         self.__nonterminals__ = { self.__lhs__ }
         self.__terminals__ = set()
         for _id in self.__rhs__:
-            if _id.islower():
+            if Rule.is_nonterminal(_id):
                 self.__nonterminals__.add(_id)
             else:
                 self.__terminals__.add(_id)
@@ -78,6 +78,18 @@ class Rule:
     def epsilon(lhs, func):
         """make an epsilon Rule"""
         return Rule((lhs, ['epsilon']), func)
+    @staticmethod
+    def is_terminal(term):
+        """whether the term is terminal"""
+        return term.isupper()
+    @staticmethod
+    def is_nonterminal(term):
+        """whether the term is nonterminal"""
+        return term.islower()
+    @staticmethod
+    def is_valid_term(term):
+        """whether the term is valid"""
+        return Rule.is_nonterminal(term) or Rule.is_terminal(term)
     def is_epsilon(self):
         """check whether a Rule is epsilon"""
         return self.__rhs__ == [ 'epsilon' ]
@@ -98,11 +110,11 @@ class Rule:
         return self.__rhs__
     def rinsert(self, term):
         """insert a term in the rightmost position of rhs"""
-        assert type(term) == str and (term.isupper() or term.islower())
+        assert type(term) == str and Rule.is_valid_term(term)
         self.__rhs__.append(term)
     def linsert(self, term):
         """insert a term in the leftmost position of rhs"""
-        assert type(term) == str and (term.isupper() or term.islower())
+        assert type(term) == str and Rule.is_valid_term(term)
         self.__rhs__.insert(0, term)
     def rremove(self):
         """remove a term in the rightmost position of rhs"""
