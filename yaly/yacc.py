@@ -255,20 +255,15 @@ def yacc():
     rules = Rules()
     precedences = None if 'precedences' not in all_vars \
         else all_vars['precedences']
-    import inspect
-    for func_name in all_vars:
-        if not func_name.startswith('p_'):
-            continue
-        func = all_vars[func_name]
-        if inspect.isfunction(func):
-            raw_rule = func.__doc__
-            if raw_rule.find('\'') != -1:
-                raise SyntaxWarning(
-                    'no single quote mark is allowed in grammar, but found \
-                    `%s` in `%s`' % (raw_rule, func.__name__))
-            rule = Rule(raw_rule, func)
-            rules.setdefault(rule.lhs())
-            rules[rule.lhs()].add(rule)
+    if 'grammar' not in all_vars:
+        raise NotImplementedError(
+            'Yacc need variable `grammar` but not defined'
+        )
+    grammar = all_vars['grammar']
+    for raw_rule in grammar:
+        rule = Rule(raw_rule, None)
+        rules.setdefault(rule.lhs())
+        rules[rule.lhs()].add(rule)
     tokens = set(all_vars['tokens'])
     for term in rules.terminals():
         if term not in tokens:
