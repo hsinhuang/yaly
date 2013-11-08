@@ -71,6 +71,13 @@ class Rule:
         return not self.__eq__(other)
     def __hash__(self):
         return self.__str__().__hash__()
+    @staticmethod
+    def epsilon(lhs, func):
+        """make an epsilon Rule"""
+        return Rule('%s : epsilon' % lhs, func)
+    def is_epsilon(self):
+        """check whether a Rule is epsilon"""
+        return self.__rhs__ == [ 'epsilon' ]
     def terminals(self):
         """getter : terminals in this rule"""
         return self.__terminals__
@@ -147,7 +154,6 @@ class CompleteRule:
 
 class Rules:
     """a container of all CompleteRule's"""
-    EPSILON = 'epsilon'
     def __init__(self):
         self.__rules__ = {}
         self.__terminals__ = set()
@@ -195,8 +201,7 @@ class Rules:
     def add(self, rule):
         """add a new Rule"""
         lhs = rule.lhs()
-        if lhs not in self:
-            self.setdefault(lhs)
+        self.setdefault(lhs)
         self[lhs].add(rule)
     def strip_im_left_recr(self, complete_rule):
         """
@@ -218,7 +223,7 @@ class Rules:
         c_rule_a_ = CompleteRule(lhs_)
         import copy
         for beta in non_left_recr:
-            if len(beta.rhs()) == 1 and beta.rhs()[0] == Rules.EPSILON:
+            if beta.is_epsilon():
                 betaa_ = copy.deepcopy(beta)
                 betaa_.rinsert(lhs_)
                 c_rule_a.add(betaa_)
@@ -226,7 +231,7 @@ class Rules:
                 betaa_ = copy.deepcopy(beta)
                 betaa_.rinsert(lhs_)
                 c_rule_a.add(betaa_)
-        c_rule_a_.add(Rule(' : '.join([lhs_, Rules.EPSILON]), None))
+        c_rule_a_.add(Rule.epsilon(lhs_, None))
         for a_alpha in left_recr:
             alpha_a_ = copy.deepcopy(a_alpha)
             alpha_a_.lremove()
@@ -238,31 +243,33 @@ class Rules:
         """
         strip all the left recursion in the rules
 
-        return a new rule
+        return a new Rules
         """
-        # length = len(nonterminals)
-        # for i in range(length):
-        #     for j in range(i):
-        #         ai_lhs, aj_lhs = nonterminals[i], nonterminals[j]
-        #         ai_rhs, aj_rhs = [rhs for rhs in rules[ai_lhs][1]], \
-        #             [rhs for rhs in rules[aj_lhs][1]]
-        #         new_ai_rhs = []
-        #         for ajy in ai_rhs:
-        #             if ajy[0] == aj_lhs:
-        #                 for delta in aj_rhs:
-        #                     if len(delta) == 1 and delta[0] == 'epsilon':
-        #                         new_ai_rhs.append(ajy[1:])
-        #                     else:
-        #                         new_ai_rhs.append(delta+ajy[1:])
-        #             else:
-        #                 new_ai_rhs.append(ajy)
-        #         ai_ = __strip_im_left_recr__((ai_lhs, new_ai_rhs), nonterminals)
-        #         for lhs in ai_:
-        #             if lhs not in nonterminals:
-        #                 nonterminals.append(lhs)
-        #                 rules[lhs] = [None, ai_[lhs]]
-        #             else:
-        #                 rules[lhs] = [rules[ai_lhs][0], ai_[lhs]]
+        new_rules = Rules()
+        nonterminals = list(self.nonterminals())
+        for i in range(len(nonterminals)):
+            for j in range(i):
+                ai_lhs, aj_lhs = nonterminals[i], nonterminals[j]
+                ai_rhs, aj_rhs = self[ai_lhs], self[aj_lhs]
+                new_ai = CompleteRule(ai_lhs)
+                for aj_gamma in ai_rhs:
+                    if aj_gamma.rhs()[0] == aj_lhs:
+                        import copy
+                        gamma = copy.deepcopy(aj_gamma)
+                        gamma.lremove()
+                        for delta in aj_rhs:
+                            if delta.is_epsilon():
+                                new_ai.add(gamma)
+                            else:
+                                for rh_elem in delta.rhs()[::-1]:
+                                    gamma.linsert(rh_elem)
+                                new_ai.add(gamma)
+                    else:
+                        new_ai.add(aj_gamma)
+                stripped_ai, stripped_ai_ = self.strip_im_left_recr(new_ai)
+                new_rules[stripped_ai.lhs()] = stripped_ai
+                new_rules[stripped_ai_.lhs()] = stripped_ai_
+        return new_rules
 
 class LL1Parser:
     """a defined LL(1) CFG Parser"""
