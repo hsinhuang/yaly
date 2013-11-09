@@ -1,5 +1,5 @@
 The YALY to-do list:
 
-2. 解析TOKENS
+0. test LL1Parser#parse method
 
 1. complete document
