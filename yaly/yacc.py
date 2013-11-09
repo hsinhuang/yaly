@@ -355,7 +355,22 @@ class LL1Parser:
         """parse the string"""
         self.__lexer__.set_string(string)
         self.__stream__ = TokenStream(self.__lexer__)
-
+    def __print_parsing_table__(self):
+        from prettytable import PrettyTable
+        table = PrettyTable(
+            [''] + [term for term in self.__rules__.terminals()] + [__END__]
+        )
+        for nonterm in self.__rules__.nonterminals():
+            row = [ nonterm ]
+            for term in self.__rules__.terminals():
+                row.append('; '.join([str(rule) \
+                    for rule in self.__parsing_table__[nonterm][term]])
+                )
+            row.append('; '.join([str(rule) \
+                for rule in self.__parsing_table__[nonterm][__END__]])
+            )
+            table.add_row(row)
+        print table
 def yacc():
     """return a Parser"""
     import sys
