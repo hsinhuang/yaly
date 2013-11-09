@@ -380,10 +380,14 @@ def yacc():
             'Yacc need variable `grammar` but not defined'
         )
     grammar = all_vars['grammar']
+    first = True
     for raw_rule in grammar:
         rule = Rule(raw_rule, None)
         rules.setdefault(rule.lhs())
         rules[rule.lhs()].add(rule)
+        if first:
+            rules.set_start_rule(rule)
+            first = False
     tokens = set(all_vars['tokens'])
     for term in rules.terminals():
         if term not in tokens:
