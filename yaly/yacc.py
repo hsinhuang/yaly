@@ -37,7 +37,7 @@ class Rule:
     a single rule for a nonterminal, and maybe this nonterminal
     has other rules
     """
-    def __init__(self, rule_spec, func):
+    def __init__(self, rule_spec, func=None):
         """
         `rule_spec` is a string or tuple which specifies the rule
         format: 'lhs : t1 t2 t3 ...' or ('lhs', ['t1', 't2', 't3', ...])
@@ -371,6 +371,7 @@ class LL1Parser:
             )
             table.add_row(row)
         print table
+
 def yacc():
     """return a Parser"""
     import sys
