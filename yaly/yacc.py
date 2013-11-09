@@ -6,34 +6,6 @@
 __EPSILON__ = 'epsilon'
 __END__ = '$'
 
-class TokenStream:
-    """an input stream of tokens, read from a string"""
-    def __init__(self, lexer):
-        self.__cache__ = None
-        self.__tokens__ = lexer.get_next_token()
-    def __iter__(self):
-        return self
-    def next(self):
-        """
-        return the next token(type: Token), None when no token remains
-
-        If there are no further items, raise the StopIteration exception.
-        """
-        if self.__cache__:
-            token = self.__cache__
-            self.__cache__ = None
-            return token
-        return self.__tokens__.next()
-    def push_back(self, token):
-        """
-        push the token back to stream
-        """
-        if self.__cache__:
-            raise IOError(
-                'cannot push token back when there is a token cached'
-            )
-        self.__cache__ = token
-
 class Rule:
     """
     a single rule for a nonterminal, and maybe this nonterminal
@@ -356,8 +328,24 @@ class LL1Parser:
     def parse(self, string):
         """parse the string"""
         self.__lexer__.set_string(string)
-        self.__stream__ = TokenStream(self.__lexer__)
-
+        input_stack = list(reversed(self.__lexer__.get_next_token()))
+        grammar_stack = [self.__rules__.start_symbol()]
+        while grammar_stack:
+            X, a = grammar_stack[-1], input_stack[-1]
+            if X == a:
+                print 'Match:', a
+                grammar_stack.pop()
+                input_stack.pop()
+            elif Rule.is_terminal(X) or not self.__parsing_table__[X][a]:
+                raise ValueError('parse stop')
+            elif len(self.__parsing_table__[X][a]) > 1:
+                raise ValueError('I do not know which rule to follow')
+            else:
+                rule = self.__parsing_table__[X][a].pop()
+                print rule
+                grammar_stack.pop()
+                if not rule.is_epsilon():
+                    grammar_stack += list(reversed(rule.rhs()))
     def __print_parsing_table__(self):
         from prettytable import PrettyTable
         table = PrettyTable(
