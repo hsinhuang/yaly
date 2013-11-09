@@ -45,3 +45,4 @@ rules.follow('f')
 # >>> set(['PLUS', 'RPAREN', '$', 'TIMES'])
 
 parser = LL1Parser(None, rules)
+parser.__print_parsing_table__()
