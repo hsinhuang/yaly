@@ -16,6 +16,8 @@ class TokenStream:
     def next(self):
         """
         return the next token(type: Token), None when no token remains
+
+        If there are no further items, raise the StopIteration exception.
         """
         if self.__cache__:
             token = self.__cache__
@@ -355,6 +357,7 @@ class LL1Parser:
         """parse the string"""
         self.__lexer__.set_string(string)
         self.__stream__ = TokenStream(self.__lexer__)
+
     def __print_parsing_table__(self):
         from prettytable import PrettyTable
         table = PrettyTable(
