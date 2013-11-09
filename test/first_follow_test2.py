@@ -1,0 +1,42 @@
+%loadpy yacc.py
+
+r0 = Rule("s  : I c T s s'")
+r1 = Rule("s  : A")
+r2 = Rule("s' : E s")
+r3 = Rule("s' : epsilon")
+r4 = Rule("c  : d c'")
+r5 = Rule("c' : OR D")
+r6 = Rule("c' : epsilon")
+r7 = Rule("d  : e d'")
+r8 = Rule("d' : OR e")
+r9 = Rule("d' : epsilon")
+ra = Rule("e  : LPAREN c RPAREN")
+rb = Rule("e  : B")
+
+rules = Rules()
+rules.add(r0)
+rules.add(r1)
+rules.add(r2)
+rules.add(r3)
+rules.add(r4)
+rules.add(r5)
+rules.add(r6)
+rules.add(r7)
+rules.add(r8)
+rules.add(r9)
+rules.add(ra)
+rules.add(rb)
+rules.set_start_rule(r0)
+
+print rules
+
+rules.follow("s")
+rules.follow("s'")
+rules.follow("c")
+rules.follow("c'")
+rules.follow("d")
+rules.follow("d'")
+rules.follow("e")
+
+parser = LL1Parser(None, rules)
+parser.__print_parsing_table__()
