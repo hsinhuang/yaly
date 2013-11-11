@@ -15,7 +15,10 @@ progtid : LBRACKET INTCON RBRACKET var_decls SEMI prog
 progtid : LPAREN parm_types RPAREN progidf
 
 var_decls : epsilon
-var_decls : COMMA var_decl var_decls
+var_decls : COMMA ID var_decls_id
+
+var_decls_id : var_decls
+var_decls_id : LBRACKET INTCON RBRACKET var_decls
 
 progidf : func_decls SEMI prog
 progidf : LBRACE in_func_decls stmts RBRACE prog
@@ -36,42 +39,35 @@ more_param_types_id : more_param_types
 more_param_types_id : LBRACKET RBRACKET more_param_types
 
 in_func_decls : epsilon
-in_func_decls : type var_decl var_decls SEMI in_func_decls
+in_func_decls : type ID in_func_decls_id
+
+in_func_decls_id : var_decls SEMI in_func_decls
+in_func_decls_id : LBRACKET INTCON RBRACKET var_decls SEMI in_func_decls
 
 stmts : epsilon
 stmts : stmt stmts
 
-for : ID assgid SEMI for2
-for : SEMI for2
-
-for2 : expr for3 SEMI
-for2 : for3 SEMI
-
-for3 : ID assgid RPAREN stmt
-for3 : RPAREN stmt
-
-return : expr SEMI
-return : SEMI
-
 stmt : IF LPAREN expr RPAREN stmt ELSE stmt
 stmt : WHILE LPAREN expr RPAREN stmt
-stmt : FOR LPAREN for
 stmt : RETURN return
 stmt : LBRACE stmts RBRACE
 stmt : SEMI
 stmt : stmtid
 
+return : expr SEMI
+return : SEMI
+
 stmtid : assgid SEMI
 stmtid : LPAREN exprs RPAREN SEMI
+
+assgid : ASSIGN expr
+assgid : LBRACKET expr RBRACKET ASSIGN expr
 
 exprs : epsilon
 exprs : expr more_exprs
 
 more_exprs : epsilon
 more_exprs : COMMA expr more_exprs
-
-assgid : ASSIGN expr
-assgid : LBRACKET expr RBRACKET ASSIGN expr
 
 expr : MINUS expr expr'
 expr : NOT expr expr'
