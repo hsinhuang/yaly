@@ -328,20 +328,25 @@ class LL1Parser:
     def parse(self, string):
         """parse the string"""
         self.__lexer__.set_string(string)
-        input_stack = list(reversed(self.__lexer__.get_next_token()))
+        input_stack = list(reversed([ token.lexical_unit() \
+            for token in self.__lexer__.get_next_token() ] + [__END__]))
         grammar_stack = [self.__rules__.start_symbol()]
         while grammar_stack:
             X, a = grammar_stack[-1], input_stack[-1]
-            if X == a:
+            if X == a or (X == __EPSILON__ and a == __END__):
                 print 'Match:', a
                 grammar_stack.pop()
                 input_stack.pop()
-            elif Rule.is_terminal(X) or not self.__parsing_table__[X][a]:
-                raise ValueError('parse stop')
+            elif Rule.is_terminal(X):
+                raise ValueError('parse stop: `%s` is terminal' % X)
+            elif not self.__parsing_table__[X][a]:
+                raise ValueError('parse stop: no rule for `%s`, `%s`' %\
+                    (X, a))
             elif len(self.__parsing_table__[X][a]) > 1:
-                raise ValueError('I do not know which rule to follow')
+                raise ValueError('parse stop: ambiguious `%s`, `%s`' %\
+                    (X, a))
             else:
-                rule = self.__parsing_table__[X][a].pop()
+                rule = list(self.__parsing_table__[X][a])[0]
                 print rule
                 grammar_stack.pop()
                 if not rule.is_epsilon():
