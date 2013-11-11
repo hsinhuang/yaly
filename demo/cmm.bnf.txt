@@ -3,6 +3,9 @@ prog : EXTERN intern_dcl SEMI prog
 prog : type progt
 prog : VOID progv
 
+intern_dcl : type func_decl
+intern_dcl : VOID func_decl
+
 type : CHAR
 type : INT
 
