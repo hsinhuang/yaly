@@ -1,25 +1,19 @@
-from cmm.lex import tokens, lexer
+import yaly.yacc as yacc
 
-def p_1(p):
-    'e : e PLUS t'
-    return p
+from cmm_lex import tokens, lexer
 
-def p_2(p):
-    'e : t'
-    return p
+grammar = (
+    "e  : t e'",
+    "e' : PLUS t e'",
+    "e' : epsilon",
+    "t  : f t'",
+    "t' : TIMES f t'",
+    "t' : epsilon",
+    "f  : LPAREN e RPAREN",
+    "f  : ID",
+)
 
-def p_3(p):
-    't : t TIMES f'
-    return p
+parser = yacc.yacc()
 
-def p_4(p):
-    't : f'
-    return p
-
-def p_5(p):
-    'f : LPAREN e RPAREN'
-    return p
-
-def p_6(p):
-    'f : ID'
-    return p
+while True:
+    parser.parse(raw_input('>>> '))
