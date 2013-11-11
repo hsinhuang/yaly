@@ -36,8 +36,7 @@ STRINGCON  =  "{ch}", where ch denotes any printable ASCII character
  (as specified by isprint(), ASCII value >= 0x20, <= 0x7e) other than
  " (double quotes) and the newline character.
 
-Comments are as in C, i.e. a sequence of characters preceded by /* and
- followed by */, and not containing any occurrence of */.
+Only single line comment is allowed.
 ```
 
 
