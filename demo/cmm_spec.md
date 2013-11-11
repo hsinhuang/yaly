@@ -69,7 +69,6 @@ func  =  type ID '(' parm_types ')' '{' { type var_decl { ',' var_decl } ';' } {
 
 stmt  =  IF '(' expr ')' stmt ELSE stmt
      |   WHILE '(' expr ')' stmt
-     |   FOR '(' [ assg ] ';' [ expr ] ';' [ assg ] ')' stmt
      |   RETURN [ expr ] ';'
      |   assg ';'
      |   ID '(' [expr { ',' expr } ] ')' ';'
