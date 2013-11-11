@@ -3,10 +3,13 @@
 
 """yacc definition for C--"""
 
-from yaly.yacc import *
+import yaly.yacc as yacc
 from cmm_lex import lexer, tokens
 
 with open('cmm.bnf.txt', 'r') as f:
     grammar = [ line.strip() for line in f.xreadlines() if line.strip() ]
 
-parser = yacc()
+parser = yacc.yacc()
+
+while True:
+    parser.parse(raw_input('>>> '))
