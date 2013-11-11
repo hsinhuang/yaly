@@ -67,7 +67,7 @@ parm_types  =  VOID
 func  =  type ID '(' parm_types ')' '{' { type var_decl { ',' var_decl } ';' } { stmt } '}'
      |   VOID ID '(' parm_types ')' '{' { type var_decl { ',' var_decl } ';' } { stmt } '}'
 
-stmt  =  IF '(' expr ')' stmt [ ELSE stmt ]
+stmt  =  IF '(' expr ')' stmt ELSE stmt
      |   WHILE '(' expr ')' stmt
      |   FOR '(' [ assg ] ';' [ expr ] ';' [ assg ] ')' stmt
      |   RETURN [ expr ] ';'
