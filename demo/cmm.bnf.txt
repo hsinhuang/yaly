@@ -6,6 +6,8 @@ prog : VOID progv
 intern_dcl : type func_decl
 intern_dcl : VOID func_decl
 
+func_decl : ID LPAREN parm_types RPAREN func_decls
+
 type : CHAR
 type : INT
 
