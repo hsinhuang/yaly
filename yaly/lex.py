@@ -12,6 +12,7 @@ class Token:
         assert type(lexical_unit) == str
         self.__lexical_unit__ = lexical_unit
         self.__raw__ = value
+        self.skip = False
         self.value = value
         self.lexer = lexer
     def __str__(self):
@@ -53,16 +54,21 @@ class Lexer:
                     self.__string__)
             lexeme = self.__string__[:next_idx]
             self.__string__ = self.__string__[next_idx:]
+            found = False
             for token in self.__raw_tokens__:
                 assert token in self.__tokens__
                 if self.__tokens__[token][0].match(lexeme):
-                    yield self.__tokens__[token][1](
+                    found = True
+                    next_token = self.__tokens__[token][1](
                         Token(token, lexeme, self)
-                        )
+                    )
+                    if next_token.skip:
+                        continue
+                    yield next_token
                     break
-            else:
-                raise AssertionError("lexeme `%s` is valid but not " + \
-                    "found the corresponding lexical unit" % lexeme)
+            if not found:
+                raise AssertionError("lexeme `%s` is valid " % lexeme  + \
+                    "but not found the corresponding lexical unit" )
     def set_string(self, string):
         """set input string"""
         self.__string__ = string
