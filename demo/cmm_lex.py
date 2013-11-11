@@ -18,7 +18,7 @@ tokens = (
     'INTCON', 'STRINGCON', 'CHARCON',
 
     # Comments
-    'COMMENT', 'CPPCOMMENT',
+    'COMMENT',
 
     # Operators
     'ASSIGN', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE',
@@ -85,29 +85,11 @@ t_CHARCON = yare.concat([
     '\'',
 ])
 
-# Comments
 def t_COMMENT(t):
-    t.lexer.lineno += t.value.count('\n')
-    t.skip = True
-    return t
-t_COMMENT.__doc__ = yare.concat([
-    '/',
-    '*',
-    yare.loop(
-        yare.select([
-            yare.diff(['*']),
-            yare.concat(['*', yare.diff(['/'])]),
-        ])
-    ),
-    '*',
-    '/'
-])
-
-def t_CPPCOMMENT(t):
     t.lexer.lineno += 1
     t.skip = True
     return t
-t_CPPCOMMENT.__doc__ = yare.concat([
+t_COMMENT.__doc__ = yare.concat([
     '/',
     '/',
     yare.loop(yare.diff(['\n'])),
