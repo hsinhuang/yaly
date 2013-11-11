@@ -88,6 +88,7 @@ t_CHARCON = yare.concat([
 # Comments
 def t_COMMENT(t):
     t.lexer.lineno += t.value.count('\n')
+    t.skip = True
     return t
 t_COMMENT.__doc__ = yare.concat([
     '/',
@@ -104,6 +105,7 @@ t_COMMENT.__doc__ = yare.concat([
 
 def t_CPPCOMMENT(t):
     t.lexer.lineno += 1
+    t.skip = True
     return t
 t_CPPCOMMENT.__doc__ = yare.concat([
     '/',
@@ -141,11 +143,15 @@ t_RBRACE = yare.escape('}')
 # Newlines
 def t_NEWLINE(t):
     t.lexer.lineno += t.value.count('\n')
+    t.skip = True
     return t
 t_NEWLINE.__doc__ = yare.loop_('\n')
 
 # Whitespaces
-t_WHITESPACE = yare.loop_(yare.select([' ', '\t']))
+def t_WHITESPACE(t):
+    t.skip = True
+    return t
+t_WHITESPACE.__doc__ = yare.loop_(yare.select([' ', '\t']))
 
 # Identifiers
 t_ID = yare.concat([
