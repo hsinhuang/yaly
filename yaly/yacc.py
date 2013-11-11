@@ -390,7 +390,7 @@ def yacc():
             first = False
     tokens = set(all_vars['tokens'])
     for term in rules.terminals():
-        if term not in tokens:
+        if term != __EPSILON__ and term not in tokens:
             raise NameError(
                 'terminal `%s` not defined as a token' % term
             )
