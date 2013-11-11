@@ -1,85 +1,94 @@
 prog : epsilon
-prog : frag prog
-
-frag : dcl SEMI
-frag : func
-
-dcl : type var_decl var_decls
-dcl : EXTERN intern_dcl
-dcl : intern_dcl
-
-var_decls : epsilon
-var_decls : COMMA var_decl var_decls
-
-intern_dcl : type func_decl
-intern_dcl : VOID func_decl
-
-func_decl : ID LPAREN parm_types RPAREN func_decls
-
-func_decls : epsilon
-func_decls : COMMA ID LPAREN parm_types RPAREN func_decls
-
-var_decl : ID
-var_decl : ID LBRACKET INTCON RBRACKET
+prog : EXTERN intern_dcl SEMI prog
+prog : type progt
+prog : VOID progv
 
 type : CHAR
 type : INT
 
+progt : ID progtid
+
+progv : ID LPAREN parm_types RPAREN progidf
+
+progtid : var_decls SEMI prog
+progtid : LBRACKET INTCON RBRACKET var_decls SEMI prog
+progtid : LPAREN parm_types RPAREN progidf
+
+var_decls : epsilon
+var_decls : COMMA var_decl var_decls
+
+progidf : func_decls SEMI prog
+progidf : LBRACE in_func_decls stmts RBRACE prog
+
+func_decls : epsilon
+func_decls : COMMA ID LPAREN parm_types RPAREN func_decls
+
 parm_types : VOID
-parm_types : type ID more_param_types
-parm_types : type ID LBRACKET RBRACKET more_param_types
+parm_types : type ID parm_types_t
+
+parm_types_t : more_param_types
+parm_types_t : LBRACKET RBRACKET more_param_types
 
 more_param_types : epsilon
-more_param_types : COMMA type ID more_param_types
-more_param_types : COMMA type ID LBRACKET RBRACKET more_param_types
+more_param_types : COMMA type ID more_param_types_id
 
-func : type ID LPAREN parm_types RPAREN LBRACE in_func_decls stmts RBRACE
-func : VOID ID LPAREN parm_types RPAREN LBRACE in_func_decls stmts RBRACE
+more_param_types_id : more_param_types
+more_param_types_id : LBRACKET RBRACKET more_param_types
 
 in_func_decls : epsilon
-in_func_decls : in_func_decl SEMI in_func_decls
-
-in_func_decl : type var_decl var_decls
+in_func_decls : type var_decl var_decls SEMI in_func_decls
 
 stmts : epsilon
 stmts : stmt stmts
 
-stmt : IF LPAREN expr RPAREN stmt
+for : ID assgid SEMI for2
+for : SEMI for2
+
+for2 : expr for3 SEMI
+for2 : for3 SEMI
+
+for3 : ID assgid RPAREN stmt
+for3 : RPAREN stmt
+
+return : expr SEMI
+return : SEMI
+
 stmt : IF LPAREN expr RPAREN stmt ELSE stmt
 stmt : WHILE LPAREN expr RPAREN stmt
-stmt : FOR LPAREN assg SEMI stmt_for_2
-stmt : FOR LPAREN SEMI stmt_for_2
-stmt_for_2 : expr stmt_for_3 SEMI
-stmt_for_2 : stmt_for_3 SEMI
-stmt_for_3 : assg RPAREN stmt
-stmt_for_3 : RPAREN stmt
-stmt : RETURN expr SEMI
-stmt : RETURN SEMI
-stmt : assg SEMI
-stmt : ID LPAREN exprs RPAREN SEMI
+stmt : FOR LPAREN for
+stmt : RETURN return
 stmt : LBRACE stmts RBRACE
 stmt : SEMI
+stmt : stmtid
+
+stmtid : assgid SEMI
+stmtid : LPAREN exprs RPAREN SEMI
 
 exprs : epsilon
 exprs : expr more_exprs
+
 more_exprs : epsilon
 more_exprs : COMMA expr more_exprs
 
-assg : ID ASSIGN expr
-assg : ID LBRACKET expr RBRACKET ASSIGN expr
+assgid : ASSIGN expr
+assgid : LBRACKET expr RBRACKET ASSIGN expr
 
-expr : MINUS expr
-expr : NOT expr
-expr : expr binop expr
-expr : expr relop expr
-expr : expr logical_op expr
-expr : ID
-expr : ID LPAREN exprs RPAREN
-expr : ID LBRACKET expr RBRACKET
-expr : LPAREN expr RPAREN
-expr : INTCON
-expr : CHARCON
-expr : STRINGCON
+expr : MINUS expr expr'
+expr : NOT expr expr'
+expr : ID exprid
+expr : LPAREN expr RPAREN expr'
+expr : INTCON expr'
+expr : CHARCON expr'
+expr : STRINGCON expr'
+
+exprid : expr'
+exprid : LPAREN exprs RPAREN expr'
+exprid : LBRACKET expr RBRACKET expr'
+
+expr' : epsilon
+expr' : binop expr expr'
+expr' : relop expr expr'
+expr' : logical_op expr expr'
 
 binop : PLUS
 binop : MINUS
