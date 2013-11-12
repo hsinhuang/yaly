@@ -312,10 +312,10 @@ class LL1Parser:
             for rule in com_rule:
                 if __EPSILON__ in self.__rules__.first(rule.rhs()):
                     for term in self.__rules__.follow(rule.lhs()):
-                        if Rule.is_terminal(term):
+                        if Rule.is_terminal(term) and term != __EPSILON__:
                             self.__parsing_table__[nonterm][term].add(rule)
                 for term in self.__rules__.first(rule.rhs()):
-                    if Rule.is_terminal(term):
+                    if Rule.is_terminal(term) and term != __EPSILON__:
                         self.__parsing_table__[nonterm][term].add(rule)
     def parse(self, string):
         """parse the string"""
