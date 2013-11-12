@@ -305,7 +305,6 @@ class LL1Parser:
                     ('left', 'TIMES', 'DIVIDE'),
                 )
         """
-        self.__stream__ = None
         self.__lexer__ = lexer
         self.__rules__ = rules
         self.__precedences__ = precedences
@@ -320,8 +319,8 @@ class LL1Parser:
             for rule in com_rule:
                 if __EPSILON__ in self.__rules__.first(rule.rhs()):
                     for term in self.__rules__.follow(rule.lhs()):
-                        self.__parsing_table__[nonterm][term].add(rule)
-                    continue
+                        if Rule.is_terminal(term):
+                            self.__parsing_table__[nonterm][term].add(rule)
                 for term in self.__rules__.first(rule.rhs()):
                     if Rule.is_terminal(term):
                         self.__parsing_table__[nonterm][term].add(rule)
@@ -334,7 +333,7 @@ class LL1Parser:
         while grammar_stack:
             X, a = grammar_stack[-1], input_stack[-1]
             if X == a or (X == __EPSILON__ and a == __END__):
-                print 'Match:', a
+                print 'Match =>', a
                 grammar_stack.pop()
                 input_stack.pop()
             elif Rule.is_terminal(X):
@@ -347,7 +346,7 @@ class LL1Parser:
                     (X, a))
             else:
                 rule = list(self.__parsing_table__[X][a])[0]
-                print rule
+                print 'Using =>', rule
                 grammar_stack.pop()
                 if not rule.is_epsilon():
                     grammar_stack += list(reversed(rule.rhs()))
