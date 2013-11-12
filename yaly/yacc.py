@@ -3,6 +3,8 @@
 
 """syntax analysis"""
 
+import lex
+
 __EPSILON__ = 'epsilon'
 __END__ = '$'
 
@@ -293,6 +295,10 @@ class Rules:
         import copy
         return copy.deepcopy(self.__follows__[term])
 
+class ParseError(Exception):
+    """parse error exception"""
+    pass
+
 class LL1Parser:
     """a defined LL(1) CFG Parser"""
     def __init__(self, lexer, rules):
@@ -322,25 +328,30 @@ class LL1Parser:
     def parse(self, string):
         """parse the string"""
         self.__lexer__.set_string(string)
-        input_stack = list(reversed([ token.lexical_unit() \
-            for token in self.__lexer__.get_next_token() ] + [__END__]))
+        input_stack = list(reversed(list(self.__lexer__.get_next_token())))
+        end_token = lex.Token(__END__, __END__, self.__lexer__.lineno,
+            self.__lexer__)
+        input_stack.insert(0, end_token)
         grammar_stack = [self.__rules__.start_symbol()]
         while grammar_stack:
             X, a = grammar_stack[-1], input_stack[-1]
-            if X == a or (X == __EPSILON__ and a == __END__):
+            if X == a.lexical_unit() or \
+                (X == __EPSILON__ and a.lexical_unit() == __END__):
                 print 'Match =>', a
                 grammar_stack.pop()
                 input_stack.pop()
             elif Rule.is_terminal(X):
-                raise ValueError('parse stop: `%s` is terminal' % X)
-            elif not self.__parsing_table__[X][a]:
-                raise ValueError('parse stop: no rule for `%s`, `%s`' %\
-                    (X, a))
-            elif len(self.__parsing_table__[X][a]) > 1:
-                raise ValueError('parse stop: ambiguious `%s`, `%s`' %\
+                raise ParseError(
+                    '%s is expected in line %d but not found' %\
+                    (X, a.lineno))
+            elif not self.__parsing_table__[X][a.lexical_unit()]:
+                raise ParseError('unexpected %s in line %d' %\
+                    (a.value, a.lineno))
+            elif len(self.__parsing_table__[X][a.lexical_unit()]) > 1:
+                raise AssertionError('parse stop: ambiguious `%s`, `%s`' %\
                     (X, a))
             else:
-                rule = list(self.__parsing_table__[X][a])[0]
+                rule = list(self.__parsing_table__[X][a.lexical_unit()])[0]
                 print 'Using =>', rule
                 grammar_stack.pop()
                 if not rule.is_epsilon():
