@@ -295,19 +295,12 @@ class Rules:
 
 class LL1Parser:
     """a defined LL(1) CFG Parser"""
-    def __init__(self, lexer, rules, precedences=None):
+    def __init__(self, lexer, rules):
         """
-        `rules` is a Rules, and `precedences` is a tuple or list
-        where tokens are ordered from lowest to highest precedence
-
-        e.g.    precedence = (
-                    ('left', 'PLUS', 'MINUS'),
-                    ('left', 'TIMES', 'DIVIDE'),
-                )
+        `rules` is a Rules
         """
         self.__lexer__ = lexer
         self.__rules__ = rules
-        self.__precedences__ = precedences
         self.__parsing_table__ = {}
         for nonterm in self.__rules__.nonterminals():
             self.__parsing_table__.setdefault(nonterm, {})
@@ -377,8 +370,6 @@ def yacc():
         )
     lexer = all_vars['lexer']
     rules = Rules()
-    precedences = None if 'precedences' not in all_vars \
-        else all_vars['precedences']
     if 'grammar' not in all_vars:
         raise NotImplementedError(
             'Yacc need variable `grammar` but not defined'
@@ -398,4 +389,4 @@ def yacc():
             raise NameError(
                 'terminal `%s` not defined as a token' % term
             )
-    return LL1Parser(lexer, rules, precedences)
+    return LL1Parser(lexer, rules)
