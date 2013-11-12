@@ -57,7 +57,7 @@ stmt : WHILE LPAREN expr RPAREN stmt
 stmt : RETURN return
 stmt : LBRACE stmts RBRACE
 stmt : SEMI
-stmt : stmtid
+stmt : ID stmtid
 
 return : expr SEMI
 return : SEMI
