@@ -8,16 +8,17 @@ class Token:
     A token is a string of one or more characters that is significant
     as a group.
     """
-    def __init__(self, lexical_unit, value, lexer):
+    def __init__(self, lexical_unit, value, lineno, lexer):
         assert type(lexical_unit) == str
         self.__lexical_unit__ = lexical_unit
         self.__raw__ = value
         self.skip = False
         self.value = value
         self.lexer = lexer
+        self.lineno = lineno
     def __str__(self):
-        return "<%s, %s>" % \
-            (self.__lexical_unit__, repr(self.value))
+        return "<%s, %s, line %d>" % \
+            (self.__lexical_unit__, repr(self.value), self.lineno)
     def lexical_unit(self):
         """getter : __lexical_unit__"""
         return self.__lexical_unit__
@@ -60,7 +61,7 @@ class Lexer:
                 if self.__tokens__[token][0].match(lexeme):
                     found = True
                     next_token = self.__tokens__[token][1](
-                        Token(token, lexeme, self)
+                        Token(token, lexeme, self.lineno, self)
                     )
                     if next_token.skip:
                         continue
