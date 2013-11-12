@@ -243,7 +243,7 @@ class Rules:
         if type(term) == tuple or type(term) == list:
             if not term:
                 return set()
-            if Rule.is_terminal(term[0]) and \
+            if Rule.is_nonterminal(term[0]) and \
                 __EPSILON__ in self.first(term[0]):
                 return self.first(term[0]).union(self.first(term[1:]))
             else:
