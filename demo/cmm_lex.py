@@ -150,7 +150,7 @@ lexer = lex.lex()
 
 if __name__ == '__main__':
     import os.path as p
-    with open(p.join(p.dirname(__file__), 'temp.c'), 'r') as f:
+    with open(p.join(p.dirname(__file__), 'cmm_input.c'), 'r') as f:
         s = f.read()
     lexer.set_string(s)
     for token in lexer.get_next_token():
