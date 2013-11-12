@@ -76,16 +76,20 @@ stmt  =  IF '(' expr ')' stmt ELSE stmt
 
 assg  =  ID [ '[' expr ']' ] '=' expr
 
-expr  =  '–' expr
-     |   '!' expr
-     |   expr binop expr
-     |   expr relop expr
-     |   expr logical_op expr
-     |   ID [ '(' [expr { ',' expr } ] ')' | '[' expr ']' ]
-     |   '(' expr ')'
-     |   INTCON
-     |   CHARCON
-     |   STRINGCON
+expr  =  biexpr
+     |   unexpr
+
+biexpr =  '(' expr binop expr ')'
+      |   '(' expr relop expr ')'
+      |   '(' expr logical_op expr ')'
+
+unexpr  =  '–' '(' expr ')'
+       |   '!' '(' expr ')'
+       |   ID [ '(' [expr { ',' expr } ] ')' | '[' expr ']' ]
+       |   '(' expr ')'
+       |   INTCON
+       |   CHARCON
+       |   STRINGCON
 
 binop  =  +
       |   –
@@ -105,22 +109,8 @@ logical_op  =  &&
 
 ### 2.2 Operator Associativities and Precedences
 
-The following table gives the associativities of various operators and
- their relative precedences. An operator with a higher precedence binds
- "tighter" than one with lower precedence. Precedences decrease as we
- go down the table.
-
-```
-Operator        Associativity
------------------------------
-!, – (unary)    right to left
-*, /            left to right
-+, – (binary)   left to right
-<, <=, >, >=    left to right
-==, !=          left to right
-&&              left to right
-||              left to right
-```
+There is no relative precedences, and you should specify it by parentheses.
+The associativity is always left to right.
 
 
 3 Typing Rules

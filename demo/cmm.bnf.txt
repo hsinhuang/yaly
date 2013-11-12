@@ -74,22 +74,29 @@ exprs : expr more_exprs
 more_exprs : epsilon
 more_exprs : COMMA expr more_exprs
 
-expr : MINUS expr expr'
-expr : NOT expr expr'
-expr : ID exprid
-expr : LPAREN expr RPAREN expr'
-expr : INTCON expr'
-expr : CHARCON expr'
-expr : STRINGCON expr'
+expr : biexpr
+expr : unexpr
 
-exprid : expr'
-exprid : LPAREN exprs RPAREN expr'
-exprid : LBRACKET expr RBRACKET expr'
+biexpr : LPAREN expr biexpr2
 
-expr' : epsilon
-expr' : binop expr expr'
-expr' : relop expr expr'
-expr' : logical_op expr expr'
+biexpr2 : RPAREN
+biexpr2 : binop expr RPAREN
+biexpr2 : relop expr RPAREN
+biexpr2 : logical_op expr RPAREN
+
+unexpr : MINUS LPAREN expr RPAREN
+unexpr : NOT LPAREN expr RPAREN
+unexpr : ID unexprid
+unexpr : INTCON
+unexpr : CHARCON
+unexpr : STRINGCON
+
+unexprid : epsilon
+unexprid : LBRACKET expr RBRACKET
+unexprid : LPAREN unexpridlp
+
+unexpridlp : RPAREN
+unexpridlp : exprs RPAREN
 
 binop : PLUS
 binop : MINUS
