@@ -11,7 +11,6 @@ with open('cmm.bnf.txt', 'r') as f:
 
 parser = yacc.yacc()
 
-while True:
-    with open('cmm_input.c', 'r') as f:
-        s = f.read()
-    parser.parse(s)
+with open('cmm_input.c', 'r') as f:
+    s = f.read()
+parser.parse(s)
