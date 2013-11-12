@@ -314,6 +314,8 @@ class LL1Parser:
                     for term in self.__rules__.follow(rule.lhs()):
                         if Rule.is_terminal(term) and term != __EPSILON__:
                             self.__parsing_table__[nonterm][term].add(rule)
+                        elif term == __END__:
+                            self.__parsing_table__[nonterm][term].add(rule)
                 for term in self.__rules__.first(rule.rhs()):
                     if Rule.is_terminal(term) and term != __EPSILON__:
                         self.__parsing_table__[nonterm][term].add(rule)
