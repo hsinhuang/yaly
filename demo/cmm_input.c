@@ -1,10 +1,15 @@
 // leading comment
 
-void main() {
-    int i = 0; // line comment
+int max(int i, int j);
+
+void main(void) {
+    int i, j; // line comment
+
     printf("\"%d\"\n", i);
 
-    for(i = 0; i < 100; i=i+1) {
+    i = 0;
+    while(i < 100) {
         printf("%d\n", i);
+        i = i + 1;
     }
 }
