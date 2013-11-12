@@ -12,7 +12,7 @@ tokens = (
     'CHAR', 'INT', 'VOID',
 
     # Keywords
-    'ELSE', 'EXTERN', 'FOR', 'IF', 'RETURN', 'WHILE',
+    'ELSE', 'EXTERN', 'IF', 'RETURN', 'WHILE',
 
     # Literals
     'INTCON', 'STRINGCON', 'CHARCON',
@@ -48,7 +48,6 @@ t_VOID = yare.concat(list('void'))
 # Keywords
 t_ELSE = yare.concat(list('else'))
 t_EXTERN = yare.concat(list('extern'))
-t_FOR = yare.concat(list('for'))
 t_IF = yare.concat(list('if'))
 t_RETURN = yare.concat(list('return'))
 t_WHILE = yare.concat(list('while'))
