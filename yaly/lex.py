@@ -118,9 +118,8 @@ def lex():
             compiled_tokens[token] = (yare.compile(func.__doc__), func)
         except SyntaxError:
             raise SyntaxError(
-                'regular expression `%s` specified \
-                in function `%s` not valid' % \
-                (func.__doc__, func_name)
+                'regular expression `%s` specified' % func.__doc__ + \
+                'in function `%s` not valid' % func_name
             )
         regexs.append(func.__doc__)
     return Lexer(compiled_tokens, tokens, yare.compile(yare.select(regexs)))

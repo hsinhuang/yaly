@@ -34,8 +34,8 @@ class Rule:
         if not all([ Rule.is_valid_term(s) for s in self.__rhs__] + \
             [ Rule.is_nonterminal(self.__lhs__) ]):
             raise SyntaxError(
-                'terminals in rules should be uppercase, \
-                while nonterminals in rules should be lowercase'
+                'terminals in rules should be uppercase, ' + \
+                'while nonterminals in rules should be lowercase'
             )
         self.__nonterminals__ = { self.__lhs__ }
         self.__terminals__ = set()
